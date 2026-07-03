@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: pgspot-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - pgspot
+    depends_on:
+      - db
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: pgspot-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - pgspot
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.4
+    container_name: pgspot-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-pgspot}
+      MYSQL_USER: ${DB_USERNAME:-pgspot}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - pgspot-db:/var/lib/mysql
+    networks:
+      - pgspot
+    ports:
+      - "${DB_PORT_FORWARD:-3307}:3306"
+
+  redis:
+    image: redis:alpine
+    container_name: pgspot-redis
+    restart: unless-stopped
+    networks:
+      - pgspot
+
+networks:
+  pgspot:
+    driver: bridge
+
+volumes:
+  pgspot-db:
