@@ -44,6 +44,9 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'favoritePoiIds' => fn () => $request->user()
+                ? $request->user()->favoritePois()->pluck('id')->all()
+                : [],
         ];
     }
 }

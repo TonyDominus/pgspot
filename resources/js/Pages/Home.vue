@@ -1,181 +1,219 @@
 <script setup>
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import AppShell from '@/Layouts/AppShell.vue';
+import SearchHeader from '@/Components/Pg/SearchHeader.vue';
+import CategoryChips from '@/Components/Pg/CategoryChips.vue';
+import MapView from '@/Components/Pg/MapView.vue';
+import BottomSheet from '@/Components/Pg/BottomSheet.vue';
+import PoiListCard from '@/Components/Pg/PoiListCard.vue';
+import SponsoredCard from '@/Components/Pg/SponsoredCard.vue';
+import PgIcon from '@/Components/Icons/PgIcon.vue';
+import { withDistance } from '@/utils/geo';
 
 const props = defineProps({
     categories: Array,
     pois: Array,
     featuredEvents: Array,
     activeCategory: String,
+    search: String,
+    mapCenter: Object,
     canContribute: Boolean,
+    sponsorships: Array,
+    featuredSponsorships: Array,
 });
 
-const user = computed(() => usePage().props.auth?.user);
-const isAdmin = computed(() => ['admin', 'superadmin'].includes(user.value?.role));
+const sponsoredPoiIds = computed(() =>
+    (props.sponsorships ?? [])
+        .filter((s) => s.poi_id)
+        .map((s) => s.poi_id),
+);
+
+const searchQuery = ref(props.search ?? '');
+const userLocation = ref(null);
+const mapRef = ref(null);
+const selectedSlug = ref(null);
+
+const poisWithDistance = computed(() => withDistance(props.pois, userLocation.value));
+
+const filteredPois = computed(() => {
+    const q = searchQuery.value.trim().toLowerCase();
+    if (!q) return poisWithDistance.value;
+
+    return poisWithDistance.value.filter(
+        (p) =>
+            p.name.toLowerCase().includes(q) ||
+            p.description?.toLowerCase().includes(q) ||
+            p.address?.toLowerCase().includes(q),
+    );
+});
 
 function filterCategory(slug) {
-    router.get(route('home'), slug ? { cat: slug } : {}, {
+    router.get(route('home'), buildParams({ cat: slug || undefined }), {
         preserveState: true,
         preserveScroll: true,
     });
 }
+
+function buildParams(extra = {}) {
+    const params = { ...extra };
+    if (searchQuery.value) params.q = searchQuery.value;
+    return params;
+}
+
+function locateUser() {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+        userLocation.value = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+        };
+        mapRef.value?.flyTo(pos.coords.latitude, pos.coords.longitude);
+    });
+}
+
+function onMapSelect(poi) {
+    selectedSlug.value = poi.slug;
+}
+
+let searchTimeout;
+watch(searchQuery, (val) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        router.get(route('home'), buildParams({ cat: props.activeCategory || undefined, q: val || undefined }), {
+            preserveState: true,
+            replace: true,
+        });
+    }, 400);
+});
 </script>
 
 <template>
-    <Head title="Home" />
+    <Head title="Esplora" />
 
-    <div class="min-h-screen bg-slate-50 text-slate-900">
-        <header class="border-b border-slate-200 bg-white">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <div>
-                    <Link :href="route('home')" class="text-xl font-bold text-blue-700">
-                        PG Spot
-                    </Link>
-                    <p class="text-sm text-slate-500">La mappa collaborativa di Perugia</p>
-                </div>
-
-                <nav class="flex items-center gap-3 text-sm">
-                    <template v-if="user">
-                        <Link
-                            v-if="isAdmin"
-                            :href="route('admin.dashboard')"
-                            class="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100"
-                        >
-                            Admin
-                        </Link>
-                        <Link
-                            :href="route('profile.edit')"
-                            class="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100"
-                        >
-                            Profilo
-                        </Link>
-                    </template>
-                    <template v-else>
-                        <Link
-                            :href="route('login')"
-                            class="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100"
-                        >
-                            Accedi
-                        </Link>
-                        <Link
-                            :href="route('register')"
-                            class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-                        >
-                            Registrati
-                        </Link>
-                    </template>
-                </nav>
-            </div>
-        </header>
-
-        <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <section class="mb-8 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white shadow-lg">
-                <h1 class="text-3xl font-bold sm:text-4xl">Scopri Perugia</h1>
-                <p class="mt-2 max-w-2xl text-blue-100">
-                    Panorami, servizi igienici, eventi e molto altro. Consulta la mappa liberamente
-                    o registrati per contribuire con foto e nuovi punti.
-                </p>
-                <p v-if="!canContribute" class="mt-4 text-sm text-blue-100">
-                    <Link :href="route('register')" class="underline">Crea un account</Link>
-                    per proporre nuovi luoghi alla community.
-                </p>
-            </section>
-
-            <section v-if="featuredEvents.length" class="mb-8">
-                <h2 class="mb-4 text-lg font-semibold">In evidenza</h2>
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <article
-                        v-for="event in featuredEvents"
-                        :key="event.id"
-                        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+    <AppShell active-nav="explore" no-padding full-width v-slot="{ openMenu }">
+            <div class="relative flex h-[100dvh] flex-col lg:grid lg:h-[calc(100dvh)] lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
+                <!-- Mappa -->
+                <div class="relative min-h-0 flex-1">
+                    <SearchHeader
+                        v-model:search="searchQuery"
+                        floating
+                        @open-menu="openMenu"
                     >
-                        <p class="text-xs font-medium uppercase tracking-wide text-blue-600">Evento</p>
-                        <h3 class="mt-1 font-semibold">{{ event.title }}</h3>
-                        <p class="mt-2 line-clamp-2 text-sm text-slate-600">{{ event.description }}</p>
-                        <p class="mt-3 text-xs text-slate-500">
-                            {{ new Date(event.starts_at).toLocaleDateString('it-IT') }}
-                        </p>
-                    </article>
-                </div>
-            </section>
+                        <CategoryChips
+                            :categories="categories"
+                            :active-category="activeCategory"
+                            @select="filterCategory"
+                        />
+                    </SearchHeader>
 
-            <section class="mb-6">
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition"
-                        :class="!activeCategory ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
-                        @click="filterCategory(null)"
-                    >
-                        Tutti
-                    </button>
-                    <button
-                        v-for="category in categories"
-                        :key="category.id"
-                        type="button"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition"
-                        :class="activeCategory === category.slug ? 'text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
-                        :style="activeCategory === category.slug ? { backgroundColor: category.color } : {}"
-                        @click="filterCategory(category.slug)"
-                    >
-                        {{ category.name }}
-                    </button>
-                </div>
-            </section>
+                    <MapView
+                        ref="mapRef"
+                        class="absolute inset-0 lg:relative lg:h-full"
+                        :pois="filteredPois"
+                        :sponsored-poi-ids="sponsoredPoiIds"
+                        :center="mapCenter"
+                        :zoom="mapCenter?.zoom ?? 14"
+                        :active-slug="selectedSlug"
+                        @select="onMapSelect"
+                    />
 
-            <section class="grid gap-4 lg:grid-cols-3">
-                <div class="lg:col-span-2">
-                    <h2 class="mb-4 text-lg font-semibold">
-                        Luoghi
-                        <span class="text-sm font-normal text-slate-500">({{ pois.length }})</span>
-                    </h2>
-
-                    <div v-if="pois.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-                        Nessun luogo in questa categoria.
+                    <div class="absolute right-4 top-28 z-[400] flex flex-col gap-2 lg:top-4">
+                        <button
+                            type="button"
+                            class="flex h-11 w-11 items-center justify-center rounded-full bg-pg-surface/95 text-pg-primary shadow-card backdrop-blur-sm"
+                            aria-label="La mia posizione"
+                            @click="locateUser"
+                        >
+                            <PgIcon name="location" class="h-5 w-5" />
+                        </button>
+                        <Link
+                            :href="canContribute ? route('contribute.create') : route('login')"
+                            class="flex h-11 w-11 items-center justify-center rounded-full bg-pg-primary text-white shadow-fab lg:hidden"
+                            aria-label="Aggiungi"
+                        >
+                            <PgIcon name="plus" class="h-5 w-5" />
+                        </Link>
                     </div>
 
-                    <div v-else class="grid gap-4 sm:grid-cols-2">
-                        <article
-                            v-for="poi in pois"
-                            :key="poi.id"
-                            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                    <div class="absolute left-4 top-28 z-[400] lg:top-4">
+                        <Link
+                            :href="route('filters', { cat: activeCategory })"
+                            class="flex items-center gap-2 rounded-full bg-pg-surface/95 px-4 py-2 text-sm font-medium text-pg-text shadow-card backdrop-blur-sm"
                         >
-                            <div class="flex flex-wrap gap-2">
-                                <span
-                                    v-for="cat in poi.categories"
-                                    :key="cat.id"
-                                    class="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                    :style="{ backgroundColor: cat.color }"
-                                >
-                                    {{ cat.name }}
-                                </span>
+                            <PgIcon name="filter" class="h-4 w-4" />
+                            Filtri
+                        </Link>
+                    </div>
+
+                    <!-- Mobile bottom sheet -->
+                    <div class="lg:hidden">
+                        <BottomSheet :pois="filteredPois" :sponsorships="sponsorships ?? []" />
+                    </div>
+                </div>
+
+                <!-- Desktop pannello laterale -->
+                <aside class="hidden min-h-0 flex-col border-l border-gray-100 bg-pg-surface lg:flex">
+                    <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                        <div>
+                            <h2 class="font-semibold text-pg-text">Vicino a te</h2>
+                            <p class="text-xs text-pg-muted">{{ filteredPois.length }} luoghi</p>
+                        </div>
+                        <Link
+                            :href="route('poi.index', { cat: activeCategory, q: searchQuery || undefined })"
+                            class="text-sm font-medium text-pg-primary"
+                        >
+                            Lista →
+                        </Link>
+                    </div>
+                    <div class="min-h-0 flex-1 overflow-y-auto p-4">
+                        <div v-if="featuredSponsorships?.length" class="mb-4">
+                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">In collaborazione con</p>
+                            <div class="space-y-3">
+                                <SponsoredCard
+                                    v-for="s in featuredSponsorships"
+                                    :key="s.id"
+                                    :sponsorship="s"
+                                    class="!w-full"
+                                />
                             </div>
-                            <h3 class="mt-2 font-semibold">{{ poi.name }}</h3>
-                            <p class="mt-1 line-clamp-2 text-sm text-slate-600">{{ poi.description }}</p>
-                            <p v-if="poi.address" class="mt-2 text-xs text-slate-500">{{ poi.address }}</p>
-                            <a
-                                class="mt-3 inline-flex text-sm font-medium text-blue-600 hover:underline"
-                                :href="`https://www.google.com/maps/dir/?api=1&destination=${poi.latitude},${poi.longitude}`"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Naviga →
-                            </a>
-                        </article>
-                    </div>
-                </div>
-
-                <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 class="font-semibold">Mappa</h2>
-                    <p class="mt-2 text-sm text-slate-600">
-                        La mappa interattiva Leaflet sarà integrata nel prossimo step.
-                        Per ora usa i link di navigazione su ogni scheda.
-                    </p>
-                    <div class="mt-4 flex h-64 items-center justify-center rounded-lg bg-slate-100 text-sm text-slate-500">
-                        Mappa in arrivo
+                        </div>
+                        <div v-if="sponsorships?.length" class="mb-4 space-y-3">
+                            <SponsoredCard
+                                v-for="s in sponsorships"
+                                :key="s.id"
+                                :sponsorship="s"
+                                class="!w-full"
+                            />
+                        </div>
+                        <div v-if="filteredPois.length === 0 && !sponsorships?.length" class="py-12 text-center text-sm text-pg-muted">
+                            Nessun luogo trovato.
+                        </div>
+                        <div v-else class="space-y-3">
+                            <PoiListCard
+                                v-for="poi in filteredPois"
+                                :key="poi.id"
+                                :poi="poi"
+                            />
+                        </div>
                     </div>
                 </aside>
-            </section>
-        </main>
-    </div>
+            </div>
+    </AppShell>
 </template>
+
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+    transition: all 0.3s ease;
+}
+.list-enter-from {
+    opacity: 0;
+    transform: translateX(-12px);
+}
+.list-leave-to {
+    opacity: 0;
+    transform: translateX(12px);
+}
+</style>

@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-pg-background text-pg-text antialiased;
+    }
+}
+
+@layer components {
+    .pg-chip {
+        @apply inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition;
+    }
+
+    .pg-chip-active {
+        @apply bg-pg-primary text-white shadow-sm;
+    }
+
+    .pg-chip-inactive {
+        @apply bg-pg-surface text-pg-muted ring-1 ring-gray-200;
+    }
+
+    .pg-card {
+        @apply rounded-2xl bg-pg-surface shadow-card;
+    }
+
+    .pg-btn-primary {
+        @apply inline-flex items-center justify-center rounded-xl bg-pg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-pg-primary-dark;
+    }
+
+    .pg-btn-outline {
+        @apply inline-flex items-center justify-center rounded-xl border border-gray-200 bg-pg-surface px-5 py-3 text-sm font-semibold text-pg-text transition hover:bg-gray-50;
+    }
+
+    .pg-input {
+        @apply w-full rounded-xl border-gray-200 bg-pg-surface text-sm text-pg-text shadow-sm focus:border-pg-primary focus:ring-pg-primary;
+    }
+}
+
+.leaflet-container {
+    font-family: inherit;
+    z-index: 0;
+}
+
+.pg-marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}

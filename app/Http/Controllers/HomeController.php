@@ -2,50 +2,83 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EventStatus;
-use App\Enums\PoiStatus;
-use App\Models\Category;
-use App\Models\Contribution;
+use App\Models\AppSetting;
 use App\Models\Event;
-use App\Models\Poi;
+use App\Services\PoiListingService;
+use App\Services\SponsorshipService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        private PoiListingService $listing,
+        private SponsorshipService $sponsorships,
+    ) {}
+
     public function index(Request $request): Response
     {
-        $categorySlug = $request->string('cat')->toString() ?: null;
-
-        $categories = Category::query()->active()->get(['id', 'slug', 'name', 'icon', 'color']);
-
-        $poisQuery = Poi::query()
-            ->published()
-            ->with(['categories:id,slug,name,color', 'photos' => fn ($q) => $q->where('is_primary', true)->limit(1)]);
-
-        if ($categorySlug) {
-            $poisQuery->whereHas('categories', fn ($q) => $q->where('slug', $categorySlug));
-        }
-
-        $pois = $poisQuery
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'address', 'rating']);
-
         $featuredEvents = Event::query()
             ->published()
             ->featured()
             ->where('starts_at', '>=', now()->subDay())
             ->orderBy('starts_at')
-            ->limit(6)
-            ->get(['id', 'title', 'slug', 'description', 'starts_at', 'ends_at', 'image', 'is_featured']);
+            ->limit(3)
+            ->get(['id', 'title', 'slug', 'description', 'starts_at', 'image']);
 
         return Inertia::render('Home', [
-            'categories' => $categories,
-            'pois' => $pois,
+            ...$this->listing->getPageData($request),
+            'mapCenter' => AppSetting::getValue('app.default_center', ['lat' => 43.1107, 'lng' => 12.3908, 'zoom' => 14]),
             'featuredEvents' => $featuredEvents,
-            'activeCategory' => $categorySlug,
+            'sponsorships' => $this->sponsorships->activeForPlacement('home_sheet'),
+            'featuredSponsorships' => $this->sponsorships->activeForPlacement('home_list'),
             'canContribute' => (bool) $request->user(),
+        ]);
+    }
+
+    public function filters(Request $request): Response
+    {
+        return Inertia::render('Filters', [
+            ...$this->listing->getPageData($request),
+            'characteristicTags' => [
+                'Vista città', 'Tramonto', 'Alba', 'Accessibile', 'Con parcheggio',
+                'Gratuito', 'Vista lago', 'Romantico', 'Foto',
+            ],
+        ]);
+    }
+
+    public function favorites(Request $request): Response
+    {
+        $user = $request->user();
+
+        $pois = $user
+            ? $user->favoritePois()->with('categories:id,slug,name,color,icon')->get()
+            : collect();
+
+        return Inertia::render('Favorites', [
+            'pois' => $pois,
+            'mapCenter' => AppSetting::getValue('app.default_center'),
+        ]);
+    }
+
+    public function routes(): Response
+    {
+        return Inertia::render('Routes', [
+            'routes' => [
+                [
+                    'title' => 'Perugia in 2 ore',
+                    'description' => 'Panorami imperdibili del centro storico',
+                    'stops' => 5,
+                    'duration' => '2h',
+                ],
+                [
+                    'title' => 'Tramonto sul centro',
+                    'description' => 'I migliori punti per il golden hour',
+                    'stops' => 4,
+                    'duration' => '1.5h',
+                ],
+            ],
         ]);
     }
 }

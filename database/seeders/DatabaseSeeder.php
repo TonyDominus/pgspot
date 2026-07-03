@@ -4,11 +4,14 @@ namespace Database\Seeders;
 
 use App\Enums\EventStatus;
 use App\Enums\PoiStatus;
+use App\Enums\SponsorshipPlacement;
+use App\Enums\SponsorshipType;
 use App\Enums\UserRole;
 use App\Models\AppSetting;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\Poi;
+use App\Models\Sponsorship;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -54,23 +57,35 @@ class DatabaseSeeder extends Seeder
         AppSetting::setValue('app.default_center', ['lat' => 43.1107, 'lng' => 12.3908, 'zoom' => 14]);
 
         $categories = [
-            ['slug' => 'panorama', 'name' => 'Panorami', 'icon' => 'mountain', 'color' => '#2563EB', 'sort_order' => 1],
-            ['slug' => 'restroom', 'name' => 'Servizi igienici', 'icon' => 'restroom', 'color' => '#059669', 'sort_order' => 2],
-            ['slug' => 'food', 'name' => 'Dove mangiare', 'icon' => 'utensils', 'color' => '#EA580C', 'sort_order' => 3],
-            ['slug' => 'parking', 'name' => 'Parcheggi', 'icon' => 'parking', 'color' => '#7C3AED', 'sort_order' => 4],
+            ['slug' => 'panorami', 'name' => 'Panorami', 'icon' => 'panorama', 'color' => '#2E7D32', 'sort_order' => 1],
+            ['slug' => 'bagni', 'name' => 'Bagni', 'icon' => 'restroom', 'color' => '#00ACC1', 'sort_order' => 2],
+            ['slug' => 'fontanelle', 'name' => 'Fontanelle', 'icon' => 'fountain', 'color' => '#1E88E5', 'sort_order' => 3],
+            ['slug' => 'parcheggi', 'name' => 'Parcheggi', 'icon' => 'parking', 'color' => '#FFB300', 'sort_order' => 4],
+            ['slug' => 'instagram-spot', 'name' => 'Instagram Spot', 'icon' => 'camera', 'color' => '#8E24AA', 'sort_order' => 5],
         ];
 
         foreach ($categories as $category) {
-            Category::query()->updateOrCreate(
-                ['slug' => $category['slug']],
-                $category,
-            );
+            Category::query()->updateOrCreate(['slug' => $category['slug']], $category);
         }
 
-        $panorama = Category::query()->where('slug', 'panorama')->first();
-        $restroom = Category::query()->where('slug', 'restroom')->first();
+        Category::query()
+            ->whereNotIn('slug', collect($categories)->pluck('slug'))
+            ->update(['is_active' => false]);
+
+        $cats = Category::query()->whereIn('slug', collect($categories)->pluck('slug'))->pluck('id', 'slug');
 
         $samplePois = [
+            [
+                'name' => 'Belvedere di Porta Sole',
+                'slug' => 'belvedere-porta-sole',
+                'description' => 'Vista spettacolare su tutta Perugia e la valle umbra. Ideale al tramonto.',
+                'latitude' => 43.1145,
+                'longitude' => 12.3865,
+                'address' => 'Via del Cassero, Perugia',
+                'rating' => 4.8,
+                'categories' => ['panorami'],
+                'attributes' => ['tags' => ['Vista città', 'Tramonto', 'Accessibile'], 'free' => true, 'sunset' => true, 'city_view' => true],
+            ],
             [
                 'name' => 'Piazza IV Novembre',
                 'slug' => 'piazza-iv-novembre',
@@ -78,16 +93,9 @@ class DatabaseSeeder extends Seeder
                 'latitude' => 43.1120,
                 'longitude' => 12.3888,
                 'address' => 'Piazza IV Novembre, Perugia',
-                'categories' => [$panorama->id],
-            ],
-            [
-                'name' => 'Porta Sole',
-                'slug' => 'porta-sole',
-                'description' => 'Belvedere panoramico sul cassero e sulla valle umbra.',
-                'latitude' => 43.1145,
-                'longitude' => 12.3865,
-                'address' => 'Via del Cassero, Perugia',
-                'categories' => [$panorama->id],
+                'rating' => 4.9,
+                'categories' => ['panorami', 'instagram-spot'],
+                'attributes' => ['tags' => ['Vista città', 'Foto'], 'free' => true],
             ],
             [
                 'name' => 'Rocca Paolina',
@@ -96,22 +104,80 @@ class DatabaseSeeder extends Seeder
                 'latitude' => 43.1109,
                 'longitude' => 12.3901,
                 'address' => 'Porta Marzia, Perugia',
-                'categories' => [$panorama->id],
+                'rating' => 4.6,
+                'categories' => ['panorami'],
+                'attributes' => ['tags' => ['Vista città', 'Accessibile'], 'free' => false],
             ],
             [
-                'name' => 'Stazione FS Perugia',
+                'name' => 'Giardini del Frontone',
+                'slug' => 'giardini-frontone',
+                'description' => 'Ampio parco con vista sulla città, perfetto per una pausa panoramica.',
+                'latitude' => 43.1088,
+                'longitude' => 12.3842,
+                'address' => 'Viale Indipendenza, Perugia',
+                'rating' => 4.5,
+                'categories' => ['panorami', 'instagram-spot'],
+                'attributes' => ['tags' => ['Vista città', 'Romantico', 'Foto'], 'free' => true],
+            ],
+            [
+                'name' => 'WC Stazione FS',
                 'slug' => 'wc-stazione-fs',
                 'description' => 'Servizi igienici in stazione, generalmente aperti negli orari dei treni.',
                 'latitude' => 43.0612,
                 'longitude' => 12.4135,
                 'address' => 'Piazza Vittorio Veneto, Perugia',
-                'categories' => [$restroom->id],
-                'attributes' => ['free' => false, 'accessible' => true],
+                'rating' => 3.5,
+                'categories' => ['bagni'],
+                'attributes' => ['tags' => ['Accessibile'], 'free' => false, 'accessible' => true],
+            ],
+            [
+                'name' => 'WC Piazza IV Novembre',
+                'slug' => 'wc-piazza-iv-novembre',
+                'description' => 'Servizi pubblici nel sottopasso, comodi per il centro storico.',
+                'latitude' => 43.1118,
+                'longitude' => 12.3890,
+                'address' => 'Piazza IV Novembre, Perugia',
+                'rating' => 3.2,
+                'categories' => ['bagni'],
+                'attributes' => ['tags' => ['Gratuito'], 'free' => true],
+            ],
+            [
+                'name' => 'Fontanella Piazza Matteotti',
+                'slug' => 'fontanella-matteotti',
+                'description' => 'Acqua potabile fresca, punto comodo nel centro.',
+                'latitude' => 43.1095,
+                'longitude' => 12.3875,
+                'address' => 'Piazza Matteotti, Perugia',
+                'rating' => 4.2,
+                'categories' => ['fontanelle'],
+                'attributes' => ['tags' => ['Gratuito'], 'free' => true],
+            ],
+            [
+                'name' => 'Parcheggio Piazza Multa',
+                'slug' => 'parcheggio-piazza-multa',
+                'description' => 'Parcheggio coperto vicino al centro storico.',
+                'latitude' => 43.1075,
+                'longitude' => 12.3920,
+                'address' => 'Piazza Multa, Perugia',
+                'rating' => 3.8,
+                'categories' => ['parcheggi'],
+                'attributes' => ['tags' => ['Con parcheggio'], 'free' => false],
+            ],
+            [
+                'name' => 'Scalinata di Sant\'Ercolano',
+                'slug' => 'scalianta-ercolano',
+                'description' => 'Scalinata iconica perfetta per scatti Instagram con vista sul centro.',
+                'latitude' => 43.1112,
+                'longitude' => 12.3915,
+                'address' => 'Via Sant\'Ercolano, Perugia',
+                'rating' => 4.7,
+                'categories' => ['instagram-spot'],
+                'attributes' => ['tags' => ['Foto', 'Vista città'], 'free' => true],
             ],
         ];
 
         foreach ($samplePois as $data) {
-            $categoryIds = $data['categories'];
+            $categorySlugs = $data['categories'];
             unset($data['categories']);
 
             $poi = Poi::query()->updateOrCreate(
@@ -125,7 +191,9 @@ class DatabaseSeeder extends Seeder
                 ],
             );
 
-            $poi->categories()->sync($categoryIds);
+            $poi->categories()->sync(
+                collect($categorySlugs)->map(fn ($slug) => $cats[$slug])->all(),
+            );
         }
 
         Event::query()->updateOrCreate(
@@ -140,5 +208,25 @@ class DatabaseSeeder extends Seeder
                 'created_by' => $superAdmin->id,
             ],
         );
+
+        $portaSole = Poi::query()->where('slug', 'belvedere-porta-sole')->first();
+
+        if ($portaSole) {
+            Sponsorship::query()->updateOrCreate(
+                ['title' => 'Demo Caffè Panorama'],
+                [
+                    'description' => 'Terrazza panoramica con vista su Perugia',
+                    'type' => SponsorshipType::Card,
+                    'partner_name' => 'Caffè Panorama',
+                    'amount_paid' => 150.00,
+                    'starts_at' => now()->subDay(),
+                    'ends_at' => now()->addMonths(2),
+                    'is_active' => true,
+                    'poi_id' => $portaSole->id,
+                    'placement' => SponsorshipPlacement::HomeSheet,
+                    'created_by' => $superAdmin->id,
+                ],
+            );
+        }
     }
 }

@@ -77,6 +77,11 @@ class Poi extends Model
         return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', PoiStatus::Published);

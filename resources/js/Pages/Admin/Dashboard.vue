@@ -1,6 +1,7 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import AdminShell from '@/Layouts/AdminShell.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import PgIcon from '@/Components/Icons/PgIcon.vue';
 
 defineProps({
     stats: Object,
@@ -10,48 +11,65 @@ defineProps({
 <template>
     <Head title="Admin" />
 
-    <AuthenticatedLayout>
-        <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Pannello Admin
-            </h2>
-        </template>
+    <AdminShell>
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-pg-text">Dashboard</h1>
+            <p class="text-sm text-pg-muted">Panoramica della piattaforma</p>
+        </div>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div class="overflow-hidden rounded-lg bg-white p-6 shadow">
-                        <p class="text-sm text-gray-500">Utenti registrati</p>
-                        <p class="mt-2 text-3xl font-bold">{{ stats.users }}</p>
-                    </div>
-                    <div class="overflow-hidden rounded-lg bg-white p-6 shadow">
-                        <p class="text-sm text-gray-500">POI pubblicati</p>
-                        <p class="mt-2 text-3xl font-bold">{{ stats.pois_published }}</p>
-                    </div>
-                    <div class="overflow-hidden rounded-lg bg-white p-6 shadow">
-                        <p class="text-sm text-gray-500">POI in attesa</p>
-                        <p class="mt-2 text-3xl font-bold text-amber-600">{{ stats.pois_pending }}</p>
-                    </div>
-                    <div class="overflow-hidden rounded-lg bg-white p-6 shadow">
-                        <p class="text-sm text-gray-500">Contributi da moderare</p>
-                        <p class="mt-2 text-3xl font-bold text-red-600">{{ stats.contributions_pending }}</p>
-                    </div>
-                    <div class="overflow-hidden rounded-lg bg-white p-6 shadow">
-                        <p class="text-sm text-gray-500">Eventi pubblicati</p>
-                        <p class="mt-2 text-3xl font-bold">{{ stats.events_published }}</p>
-                    </div>
-                </div>
-
-                <div class="mt-8 rounded-lg bg-white p-6 shadow">
-                    <h3 class="font-semibold text-gray-800">Prossimi step</h3>
-                    <ul class="mt-3 list-inside list-disc space-y-1 text-sm text-gray-600">
-                        <li>Moderazione contributi utente</li>
-                        <li>Gestione eventi e vetrine</li>
-                        <li>Mappa Leaflet interattiva</li>
-                        <li>Pannello superadmin per impostazioni globali</li>
-                    </ul>
-                </div>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="pg-card p-5">
+                <p class="text-sm text-pg-muted">Utenti</p>
+                <p class="mt-1 text-3xl font-bold text-pg-text">{{ stats.users }}</p>
+            </div>
+            <div class="pg-card p-5">
+                <p class="text-sm text-pg-muted">POI pubblicati</p>
+                <p class="mt-1 text-3xl font-bold text-pg-primary">{{ stats.pois_published }}</p>
+            </div>
+            <div class="pg-card p-5">
+                <p class="text-sm text-pg-muted">In attesa</p>
+                <p class="mt-1 text-3xl font-bold text-pg-warning">{{ stats.pois_pending }}</p>
+            </div>
+            <div class="pg-card p-5">
+                <p class="text-sm text-pg-muted">Contributi da moderare</p>
+                <p class="mt-1 text-3xl font-bold text-pg-error">{{ stats.contributions_pending }}</p>
+            </div>
+            <div class="pg-card p-5">
+                <p class="text-sm text-pg-muted">Eventi attivi</p>
+                <p class="mt-1 text-3xl font-bold">{{ stats.events_published }}</p>
+            </div>
+            <div class="pg-card border-pg-accent/30 bg-amber-50/50 p-5">
+                <p class="text-sm text-pg-muted">Sponsor attivi</p>
+                <p class="mt-1 text-3xl font-bold text-amber-700">{{ stats.sponsorships_active }}</p>
+                <p class="text-xs text-pg-muted">su {{ stats.sponsorships_total }} totali</p>
+            </div>
+            <div class="pg-card border-pg-accent/30 bg-amber-50/50 p-5 sm:col-span-2">
+                <p class="text-sm text-pg-muted">Incassi sponsorizzazioni</p>
+                <p class="mt-1 text-3xl font-bold text-amber-700">
+                    € {{ Number(stats.sponsorships_revenue).toFixed(2) }}
+                </p>
             </div>
         </div>
-    </AuthenticatedLayout>
+
+        <div class="mt-8 grid gap-4 lg:grid-cols-2">
+            <Link :href="route('admin.sponsorships.create')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pg-accent/20">
+                    <PgIcon name="plus" class="h-6 w-6 text-amber-700" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Nuova sponsorizzazione</p>
+                    <p class="text-sm text-pg-muted">Aggiungi contenuto sponsorizzato con date e importo</p>
+                </div>
+            </Link>
+            <Link :href="route('admin.sponsorships.index')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pg-primary/10">
+                    <PgIcon name="star" class="h-6 w-6 text-pg-primary" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Gestisci sponsorizzazioni</p>
+                    <p class="text-sm text-pg-muted">Modifica, disattiva o elimina campagne</p>
+                </div>
+            </Link>
+        </div>
+    </AdminShell>
 </template>
