@@ -6,11 +6,20 @@ import PageTransition from '@/Components/Pg/PageTransition.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
+const isSuperAdmin = computed(() => user.value?.role === 'superadmin');
 
-const navItems = [
-    { href: 'admin.dashboard', icon: 'compass', label: 'Dashboard' },
-    { href: 'admin.sponsorships.index', icon: 'star', label: 'Sponsorizzazioni' },
-];
+const navItems = computed(() => {
+    const items = [
+        { href: 'admin.dashboard', icon: 'compass', label: 'Dashboard' },
+        { href: 'admin.pois.index', icon: 'location', label: 'POI' },
+        { href: 'admin.contributions.index', icon: 'filter', label: 'Moderazione' },
+        { href: 'admin.sponsorships.index', icon: 'star', label: 'Sponsorizzazioni' },
+    ];
+    if (isSuperAdmin.value) {
+        items.push({ href: 'admin.users.index', icon: 'user', label: 'Utenti' });
+    }
+    return items;
+});
 </script>
 
 <template>

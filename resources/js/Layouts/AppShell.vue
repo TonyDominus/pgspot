@@ -4,11 +4,13 @@ import BottomNav from '@/Components/Pg/BottomNav.vue';
 import DesktopSidebar from '@/Components/Pg/DesktopSidebar.vue';
 import PageTransition from '@/Components/Pg/PageTransition.vue';
 import SideMenu from '@/Components/Pg/SideMenu.vue';
+import SiteFooter from '@/Components/Pg/SiteFooter.vue';
 
 defineProps({
     activeNav: { type: String, default: 'explore' },
     noPadding: { type: Boolean, default: false },
     fullWidth: { type: Boolean, default: false },
+    hideFooter: { type: Boolean, default: false },
 });
 
 const menuOpen = ref(false);
@@ -35,6 +37,8 @@ const openMenu = () => {
             </PageTransition>
 
             <BottomNav :active="activeNav" />
+
+            <SiteFooter v-if="!hideFooter && !fullWidth" />
         </div>
 
         <SideMenu :open="menuOpen" @close="menuOpen = false" />

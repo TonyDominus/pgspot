@@ -52,6 +52,24 @@ defineProps({
         </div>
 
         <div class="mt-8 grid gap-4 lg:grid-cols-2">
+            <Link :href="route('admin.pois.index')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pg-primary/10">
+                    <PgIcon name="location" class="h-6 w-6 text-pg-primary" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Gestisci POI</p>
+                    <p class="text-sm text-pg-muted">Tabella ordinata con modifica ed eliminazione</p>
+                </div>
+            </Link>
+            <Link :href="route('admin.contributions.index')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
+                    <PgIcon name="filter" class="h-6 w-6 text-pg-error" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Moderazione</p>
+                    <p class="text-sm text-pg-muted">{{ stats.contributions_pending }} contributi in attesa</p>
+                </div>
+            </Link>
             <Link :href="route('admin.sponsorships.create')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-pg-accent/20">
                     <PgIcon name="plus" class="h-6 w-6 text-amber-700" />

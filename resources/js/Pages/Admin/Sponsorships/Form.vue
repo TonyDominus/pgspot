@@ -1,6 +1,8 @@
 <script setup>
 import AdminShell from '@/Layouts/AdminShell.vue';
+import SponsoredCard from '@/Components/Pg/SponsoredCard.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     sponsorship: Object,
@@ -40,6 +42,22 @@ function submit() {
         form.post(route('admin.sponsorships.store'));
     }
 }
+
+const previewSponsorship = computed(() => {
+    const poi = props.pois?.find((p) => String(p.id) === String(form.poi_id));
+    return {
+        id: 'preview',
+        title: form.title,
+        description: form.description,
+        partner_name: form.partner_name,
+        external_url: form.external_url,
+        poi: poi
+            ? { ...poi, name: poi.name, slug: poi.slug, rating: poi.rating }
+            : form.external_url
+              ? null
+              : { name: form.title, slug: '', rating: null },
+    };
+});
 </script>
 
 <template>
@@ -112,6 +130,16 @@ function submit() {
                         <span class="text-sm font-medium">Campagna attiva</span>
                     </label>
                 </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-5">
+                <p class="mb-3 text-sm font-semibold text-pg-text">Anteprima — come apparirà</p>
+                <div class="flex justify-center rounded-xl bg-gray-50 p-4">
+                    <SponsoredCard :sponsorship="previewSponsorship" />
+                </div>
+                <p class="mt-2 text-center text-xs text-pg-muted">
+                    La card sponsorizzata verrà mostrata nella home e nel bottom sheet
+                </p>
             </div>
 
             <div class="flex gap-3 pt-2">

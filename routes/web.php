@@ -1,13 +1,19 @@
 <?php
 
+use App\Http\Controllers\Admin\ContributionController as AdminContributionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PoiController as AdminPoiController;
 use App\Http\Controllers\Admin\SponsorshipController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PoiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Support\AuthRedirect;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -22,15 +28,33 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/filtri', [HomeController::class, 'filters'])->name('filters');
-Route::get('/itinerari', [HomeController::class, 'routes'])->name('routes');
+Route::get('/itinerari', [ItineraryController::class, 'index'])->name('routes');
+Route::get('/itinerari/{slug}', [ItineraryController::class, 'show'])->name('itineraries.show');
+
+Route::get('/legal/{page}', [PageController::class, 'legal'])->name('legal.show');
 
 Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    $user = auth()->user();
+
+    return AuthRedirect::intended($user);
+})->middleware('auth')->name('dashboard');
 
 Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pois', [AdminPoiController::class, 'index'])->name('pois.index');
+    Route::get('/pois/{poi}/edit', [AdminPoiController::class, 'edit'])->name('pois.edit');
+    Route::put('/pois/{poi}', [AdminPoiController::class, 'update'])->name('pois.update');
+    Route::delete('/pois/{poi}', [AdminPoiController::class, 'destroy'])->name('pois.destroy');
+    Route::get('/contributions', [AdminContributionController::class, 'index'])->name('contributions.index');
+    Route::post('/contributions/{contribution}/approve', [AdminContributionController::class, 'approve'])->name('contributions.approve');
+    Route::post('/contributions/{contribution}/reject', [AdminContributionController::class, 'reject'])->name('contributions.reject');
     Route::resource('sponsorships', SponsorshipController::class)->except(['show']);
+});
+
+Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 Route::middleware('auth')->group(function () {

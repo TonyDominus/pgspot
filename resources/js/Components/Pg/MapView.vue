@@ -15,8 +15,23 @@ const props = defineProps({
 const emit = defineEmits(['select']);
 
 const mapEl = ref(null);
+const mapStyle = ref('standard');
 let map = null;
 let markers = [];
+let tileLayer = null;
+
+const tileLayers = {
+    standard: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenStreetMap',
+        label: 'Mappa',
+    },
+    terrain: {
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenTopoMap',
+        label: 'Rilievo',
+    },
+};
 
 onMounted(() => {
     if (!mapEl.value) return;
@@ -26,10 +41,7 @@ onMounted(() => {
         attributionControl: true,
     }).setView([props.center.lat, props.center.lng], props.zoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 19,
-    }).addTo(map);
+    setTileLayer(mapStyle.value);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -42,6 +54,21 @@ onUnmounted(() => {
 
 watch(() => props.pois, renderMarkers, { deep: true });
 watch(() => props.activeSlug, highlightActive);
+
+function setTileLayer(style) {
+    if (!map) return;
+    if (tileLayer) map.removeLayer(tileLayer);
+    const cfg = tileLayers[style];
+    tileLayer = L.tileLayer(cfg.url, {
+        attribution: cfg.attribution,
+        maxZoom: style === 'terrain' ? 17 : 19,
+    }).addTo(map);
+}
+
+function switchStyle(style) {
+    mapStyle.value = style;
+    setTileLayer(style);
+}
 
 function markerColor(poi) {
     return poi.categories?.[0]?.color ?? '#2E7D32';
@@ -83,5 +110,19 @@ defineExpose({ flyTo });
 </script>
 
 <template>
-    <div ref="mapEl" class="h-full w-full" :class="class" />
+    <div class="relative h-full w-full" :class="class">
+        <div ref="mapEl" class="h-full w-full" />
+        <div class="absolute bottom-20 left-4 z-[400] flex gap-1 rounded-full bg-pg-surface/95 p-1 shadow-card backdrop-blur-sm lg:bottom-4">
+            <button
+                v-for="(cfg, key) in tileLayers"
+                :key="key"
+                type="button"
+                class="rounded-full px-3 py-1.5 text-xs font-medium transition"
+                :class="mapStyle === key ? 'bg-pg-primary text-white' : 'text-pg-muted hover:bg-gray-100'"
+                @click="switchStyle(key)"
+            >
+                {{ cfg.label }}
+            </button>
+        </div>
+    </div>
 </template>

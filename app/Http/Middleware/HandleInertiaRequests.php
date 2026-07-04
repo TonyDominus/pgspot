@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,6 +48,12 @@ class HandleInertiaRequests extends Middleware
             'favoritePoiIds' => fn () => $request->user()
                 ? $request->user()->favoritePois()->pluck('id')->all()
                 : [],
+            'site' => fn () => [
+                'paypalUrl' => AppSetting::getValue('site.paypal', ['url' => ''])['url'] ?? '',
+                'instagram' => AppSetting::getValue('site.social', [])['instagram'] ?? '',
+                'facebook' => AppSetting::getValue('site.social', [])['facebook'] ?? '',
+                'email' => AppSetting::getValue('site.contact', [])['email'] ?? 'info@pgspot.it',
+            ],
         ];
     }
 }

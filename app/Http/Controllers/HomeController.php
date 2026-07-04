@@ -61,24 +61,4 @@ class HomeController extends Controller
             'mapCenter' => AppSetting::getValue('app.default_center'),
         ]);
     }
-
-    public function routes(): Response
-    {
-        return Inertia::render('Routes', [
-            'routes' => [
-                [
-                    'title' => 'Perugia in 2 ore',
-                    'description' => 'Panorami imperdibili del centro storico',
-                    'stops' => 5,
-                    'duration' => '2h',
-                ],
-                [
-                    'title' => 'Tramonto sul centro',
-                    'description' => 'I migliori punti per il golden hour',
-                    'stops' => 4,
-                    'duration' => '1.5h',
-                ],
-            ],
-        ]);
-    }
 }

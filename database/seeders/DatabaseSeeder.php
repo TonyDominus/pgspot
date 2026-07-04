@@ -55,6 +55,12 @@ class DatabaseSeeder extends Seeder
         AppSetting::setValue('app.tagline', 'La mappa collaborativa di Perugia');
         AppSetting::setValue('app.city', 'Perugia');
         AppSetting::setValue('app.default_center', ['lat' => 43.1107, 'lng' => 12.3908, 'zoom' => 14]);
+        AppSetting::setValue('site.paypal', ['url' => 'https://paypal.me/pgspot']);
+        AppSetting::setValue('site.social', [
+            'instagram' => 'https://instagram.com/pgspot',
+            'facebook' => 'https://facebook.com/pgspot',
+        ]);
+        AppSetting::setValue('site.contact', ['email' => 'info@pgspot.it']);
 
         $categories = [
             ['slug' => 'panorami', 'name' => 'Panorami', 'icon' => 'panorama', 'color' => '#2E7D32', 'sort_order' => 1],
@@ -228,5 +234,40 @@ class DatabaseSeeder extends Seeder
                 ],
             );
         }
+
+        $poiIdsBySlug = Poi::query()->pluck('id', 'slug');
+
+        \App\Models\Itinerary::query()->updateOrCreate(
+            ['slug' => 'perugia-2-ore'],
+            [
+                'title' => 'Perugia in 2 ore',
+                'description' => 'Panorami imperdibili del centro storico: dalla Rocca Paolina al Belvedere di Porta Sole.',
+                'duration' => '2h',
+                'poi_ids' => array_values(array_filter([
+                    $poiIdsBySlug['rocca-paolina'] ?? null,
+                    $poiIdsBySlug['piazza-iv-novembre'] ?? null,
+                    $poiIdsBySlug['scalianta-ercolano'] ?? null,
+                    $poiIdsBySlug['belvedere-porta-sole'] ?? null,
+                    $poiIdsBySlug['giardini-frontone'] ?? null,
+                ])),
+                'sort_order' => 1,
+            ],
+        );
+
+        \App\Models\Itinerary::query()->updateOrCreate(
+            ['slug' => 'tramonto-centro'],
+            [
+                'title' => 'Tramonto sul centro',
+                'description' => 'I migliori punti per il golden hour con vista sulla città.',
+                'duration' => '1.5h',
+                'poi_ids' => array_values(array_filter([
+                    $poiIdsBySlug['giardini-frontone'] ?? null,
+                    $poiIdsBySlug['belvedere-porta-sole'] ?? null,
+                    $poiIdsBySlug['piazza-iv-novembre'] ?? null,
+                    $poiIdsBySlug['scalianta-ercolano'] ?? null,
+                ])),
+                'sort_order' => 2,
+            ],
+        );
     }
 }

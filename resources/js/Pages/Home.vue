@@ -7,6 +7,7 @@ import CategoryChips from '@/Components/Pg/CategoryChips.vue';
 import MapView from '@/Components/Pg/MapView.vue';
 import BottomSheet from '@/Components/Pg/BottomSheet.vue';
 import PoiListCard from '@/Components/Pg/PoiListCard.vue';
+import PoiPreviewPanel from '@/Components/Pg/PoiPreviewPanel.vue';
 import SponsoredCard from '@/Components/Pg/SponsoredCard.vue';
 import PgIcon from '@/Components/Icons/PgIcon.vue';
 import { withDistance } from '@/utils/geo';
@@ -48,6 +49,10 @@ const filteredPois = computed(() => {
     );
 });
 
+const selectedPoi = computed(() =>
+    filteredPois.value.find((p) => p.slug === selectedSlug.value) ?? null,
+);
+
 function filterCategory(slug) {
     router.get(route('home'), buildParams({ cat: slug || undefined }), {
         preserveState: true,
@@ -75,6 +80,11 @@ function locateUser() {
 
 function onMapSelect(poi) {
     selectedSlug.value = poi.slug;
+    mapRef.value?.flyTo(Number(poi.latitude), Number(poi.longitude));
+}
+
+function closePreview() {
+    selectedSlug.value = null;
 }
 
 let searchTimeout;
@@ -92,7 +102,7 @@ watch(searchQuery, (val) => {
 <template>
     <Head title="Esplora" />
 
-    <AppShell active-nav="explore" no-padding full-width v-slot="{ openMenu }">
+    <AppShell active-nav="explore" full-width hide-footer no-padding v-slot="{ openMenu }">
             <div class="relative flex h-[100dvh] flex-col lg:grid lg:h-[calc(100dvh)] lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
                 <!-- Mappa -->
                 <div class="relative min-h-0 flex-1">
@@ -146,6 +156,13 @@ watch(searchQuery, (val) => {
                             Filtri
                         </Link>
                     </div>
+
+                    <!-- Pannello info POI su tap -->
+                    <PoiPreviewPanel
+                        :poi="selectedPoi"
+                        :visible="!!selectedPoi"
+                        @close="closePreview"
+                    />
 
                     <!-- Mobile bottom sheet -->
                     <div class="lg:hidden">
