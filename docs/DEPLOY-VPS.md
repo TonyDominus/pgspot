@@ -213,15 +213,29 @@ Dopo ogni `git pull`:
 
 ```bash
 cd /var/www/pgspot
+
+# 1. Permessi PRIMA di tutto (evita errori su log e bootstrap/cache)
+sudo chown -R $USER:www-data storage bootstrap/cache
+sudo chmod -R ug+rwx storage bootstrap/cache
+
+# 2. Aggiorna codice e dipendenze
 git pull origin main
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
+
+# 3. Migrazioni e cache
 php artisan migrate --force
+php artisan optimize:clear
 php artisan config:cache
-php artisan route:cache
 php artisan view:cache
+php artisan route:cache
+
+# 4. Permessi finali per Nginx/PHP-FPM
 sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 ```
+
+> **Nota Composer:** l'opzione corretta è `--optimize-autoloader` (con **-er** finale), non `--optimize-autoload`.
 
 Oppure usa lo script:
 
@@ -250,12 +264,34 @@ Sulla VPS il clone è già fatto al passo 2.
 
 | Problema | Soluzione |
 |----------|-----------|
+| `The "--optimize-autoload" option does not exist` | Usa `--optimize-autoloader` (con **-er**): `composer install --no-dev --optimize-autoloader` |
+| Permission denied su `storage/logs` o `bootstrap/cache` | Esegui `chown`/`chmod` **prima** dei comandi artisan (vedi sezione 8) |
+| `route:cache` / `CompiledRouteCollection` | `php artisan route:clear` poi riprova; se persiste, salta `route:cache` (il sito funziona ugualmente) |
 | 502 Bad Gateway | Verifica PHP-FPM: `sudo systemctl status php8.3-fpm` |
 | 500 errore Laravel | Controlla `storage/logs/laravel.log` |
-| Permessi negati | `chown www-data:www-data storage bootstrap/cache` |
+| Permessi negati | `sudo chown -R www-data:www-data storage bootstrap/cache && sudo chmod -R 775 storage bootstrap/cache` |
 | Asset non caricati | Esegui `npm run build`, verifica `public/build/` |
 | SSL non funziona | Dominio deve puntare alla VPS; `certbot certificates` |
 | Altri siti rotti | Non modificare il default; usa solo `sites-available/pgspot` |
+
+### Ripristino rapido dopo errori di deploy
+
+Se il deploy è andato in errore a metà:
+
+```bash
+cd /var/www/pgspot
+sudo chown -R $USER:www-data storage bootstrap/cache
+sudo chmod -R ug+rwx storage bootstrap/cache
+sudo rm -f bootstrap/cache/config.php bootstrap/cache/routes-v7.php
+php artisan optimize:clear
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+php artisan config:cache
+php artisan view:cache
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
+```
 
 ---
 

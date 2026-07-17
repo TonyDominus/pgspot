@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ContributionController as AdminContributionContro
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PoiController as AdminPoiController;
 use App\Http\Controllers\Admin\SponsorshipController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\FavoriteController;
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
 Route::middleware('auth')->group(function () {

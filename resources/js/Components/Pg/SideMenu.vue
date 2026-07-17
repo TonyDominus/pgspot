@@ -78,6 +78,19 @@ const links = computed(() => [
                         <PgIcon name="filter" class="h-5 w-5 text-pg-warning" />
                         Pannello Admin
                     </Link>
+
+                    <div class="my-3 border-t border-gray-100 pt-3">
+                        <p class="mb-2 px-4 text-xs font-semibold uppercase tracking-wide text-pg-muted">Legale</p>
+                        <Link
+                            v-for="legal in ['privacy', 'termini', 'cookie', 'contatti']"
+                            :key="legal"
+                            :href="route('legal.show', legal)"
+                            class="mb-1 block rounded-xl px-4 py-2 text-sm text-pg-muted hover:bg-pg-primary/5 hover:text-pg-text"
+                            @click="emit('close')"
+                        >
+                            {{ legal.charAt(0).toUpperCase() + legal.slice(1) }}
+                        </Link>
+                    </div>
                 </nav>
 
                 <div class="border-t border-gray-100 p-4">

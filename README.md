@@ -62,10 +62,10 @@ Password per tutti in locale: `password` (configurabile con `SEED_DEMO_PASSWORD`
 
 | Ruolo        | Permessi principali                          |
 |--------------|-----------------------------------------------|
-| Guest        | Consulta mappa, POI ed eventi                 |
-| user         | Contributi, preferiti, notifiche              |
-| admin        | Moderazione, eventi, dashboard                |
-| superadmin   | Impostazioni globali, gestione admin          |
+| Guest        | Consulta mappa, POI, itinerari e pagine legali |
+| user         | Contributi, preferiti, recensioni, profilo    |
+| admin        | Moderazione POI, sponsorizzazioni, dashboard  |
+| superadmin   | Gestione utenti, impostazioni globali         |
 
 ## Struttura progetto
 
@@ -281,14 +281,23 @@ docker compose exec app npm ci && npm run build
 
 App su `http://localhost:8080`.
 
+## Funzionalità attuali
+
+- Mappa Leaflet interattiva con categorie, filtri e anteprima POI
+- Lista e dettaglio luoghi con recensioni e preferiti
+- Contributi utente con moderazione admin
+- Pannello admin: POI, moderazione, sponsorizzazioni
+- Superadmin: gestione utenti e impostazioni globali (legali, social, mappa)
+- Itinerari, footer legale, toast feedback
+
 ## Prossimi sviluppi
 
-- [ ] Mappa Leaflet interattiva
-- [ ] Form contributi utente + moderazione admin
-- [ ] CRUD eventi e vetrine
-- [ ] Pannello superadmin (impostazioni, ruoli)
-- [ ] PWA (manifest + service worker)
 - [ ] Upload foto POI
+- [ ] CRUD eventi (backend parziale)
+- [ ] CRUD itinerari da admin
+- [ ] Notifiche email
+- [ ] SEO (sitemap, OG tags) e analytics con cookie consent
+- [ ] PWA (manifest + service worker)
 
 ## Licenza
 

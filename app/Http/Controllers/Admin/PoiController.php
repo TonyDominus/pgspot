@@ -8,7 +8,6 @@ use App\Models\Category;
 use App\Models\Poi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -67,7 +66,6 @@ class PoiController extends Controller
 
         $poi->update([
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']),
             'description' => $validated['description'] ?? null,
             'latitude' => $validated['latitude'],
             'longitude' => $validated['longitude'],

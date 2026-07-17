@@ -4,13 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#2E7D32">
+        <meta name="description" content="PG Spot — la mappa collaborativa di Perugia: panorami, servizi, itinerari e luoghi da scoprire.">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+        <title inertia>{{ config('app.name', 'PG Spot') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead

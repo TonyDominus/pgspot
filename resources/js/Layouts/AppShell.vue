@@ -5,6 +5,7 @@ import DesktopSidebar from '@/Components/Pg/DesktopSidebar.vue';
 import PageTransition from '@/Components/Pg/PageTransition.vue';
 import SideMenu from '@/Components/Pg/SideMenu.vue';
 import SiteFooter from '@/Components/Pg/SiteFooter.vue';
+import FlashToast from '@/Components/Pg/FlashToast.vue';
 
 defineProps({
     activeNav: { type: String, default: 'explore' },
@@ -42,5 +43,6 @@ const openMenu = () => {
         </div>
 
         <SideMenu :open="menuOpen" @close="menuOpen = false" />
+        <FlashToast />
     </div>
 </template>

@@ -1,11 +1,14 @@
 <script setup>
 import AdminShell from '@/Layouts/AdminShell.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PgIcon from '@/Components/Icons/PgIcon.vue';
 
 defineProps({
     stats: Object,
 });
+
+const isSuperAdmin = computed(() => usePage().props.auth?.user?.role === 'superadmin');
 </script>
 
 <template>
@@ -86,6 +89,19 @@ defineProps({
                 <div>
                     <p class="font-semibold text-pg-text">Gestisci sponsorizzazioni</p>
                     <p class="text-sm text-pg-muted">Modifica, disattiva o elimina campagne</p>
+                </div>
+            </Link>
+            <Link
+                v-if="isSuperAdmin"
+                :href="route('admin.settings.edit')"
+                class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md"
+            >
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
+                    <PgIcon name="clock" class="h-6 w-6 text-pg-muted" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Impostazioni globali</p>
+                    <p class="text-sm text-pg-muted">Legali, social, PayPal e centro mappa</p>
                 </div>
             </Link>
         </div>
