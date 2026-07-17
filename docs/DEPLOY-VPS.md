@@ -214,7 +214,8 @@ Dopo ogni `git pull`:
 ```bash
 cd /var/www/pgspot
 
-# 1. Permessi PRIMA di tutto (evita errori su log e bootstrap/cache)
+# 1. Permessi PRIMA di tutto (composer chiama artisan → scrive log e bootstrap/cache)
+mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
 sudo chown -R $USER:www-data storage bootstrap/cache
 sudo chmod -R ug+rwx storage bootstrap/cache
 

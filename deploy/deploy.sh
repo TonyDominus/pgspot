@@ -9,7 +9,8 @@ echo "==> Deploy PG Spot in ${APP_DIR}"
 
 cd "${APP_DIR}"
 
-echo "==> Permessi (prima di artisan/composer cache)"
+echo "==> Permessi (prima di artisan/composer — obbligatorio)"
+mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
 sudo chown -R "${USER}:${WEB_USER}" storage bootstrap/cache
 sudo chmod -R ug+rwx storage bootstrap/cache
 
@@ -43,5 +44,8 @@ php artisan storage:link 2>/dev/null || true
 echo "==> Permessi finali per PHP-FPM"
 sudo chown -R "${WEB_USER}:${WEB_USER}" storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
+if [ -L public/storage ] || [ -d public/storage ]; then
+    sudo chown -h "${WEB_USER}:${WEB_USER}" public/storage 2>/dev/null || sudo chown -R "${WEB_USER}:${WEB_USER}" public/storage
+fi
 
 echo "==> Deploy completato"
