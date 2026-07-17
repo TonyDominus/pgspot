@@ -175,6 +175,8 @@ php artisan key:generate
 php artisan migrate --seed --force
 php artisan storage:link
 
+> **Importante:** `storage:link` serve per servire le foto POI da `/storage/...`. Eseguilo in locale e in produzione.
+
 sudo chown -R www-data:www-data storage bootstrap/cache
 ```
 
@@ -292,8 +294,8 @@ App su `http://localhost:8080`.
 
 ## Prossimi sviluppi
 
-- [ ] Upload foto POI
-- [ ] CRUD eventi (backend parziale)
+- Upload foto POI (admin + obbligatoria in contribuzione)
+- [ ] CRUD eventi da admin
 - [ ] CRUD itinerari da admin
 - [ ] Notifiche email
 - [ ] SEO (sitemap, OG tags) e analytics con cookie consent

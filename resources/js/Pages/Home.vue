@@ -157,15 +157,30 @@ watch(searchQuery, (val) => {
                         </Link>
                     </div>
 
-                    <!-- Pannello info POI su tap -->
+                    <div
+                        v-if="featuredEvents?.length"
+                        class="absolute left-4 right-4 top-36 z-[400] lg:left-auto lg:right-4 lg:top-16 lg:max-w-xs"
+                    >
+                        <div
+                            v-for="event in featuredEvents.slice(0, 1)"
+                            :key="event.id"
+                            class="rounded-2xl bg-pg-primary/95 p-3 text-white shadow-card backdrop-blur-sm"
+                        >
+                            <p class="text-xs font-semibold uppercase tracking-wide opacity-80">Evento</p>
+                            <p class="mt-0.5 font-semibold">{{ event.title }}</p>
+                            <p v-if="event.description" class="mt-1 line-clamp-2 text-xs opacity-90">{{ event.description }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Pannello info POI su tap (sopra il bottom sheet) -->
                     <PoiPreviewPanel
                         :poi="selectedPoi"
                         :visible="!!selectedPoi"
                         @close="closePreview"
                     />
 
-                    <!-- Mobile bottom sheet -->
-                    <div class="lg:hidden">
+                    <!-- Mobile bottom sheet — nascosto quando c'è anteprima POI -->
+                    <div v-show="!selectedPoi" class="lg:hidden">
                         <BottomSheet :pois="filteredPois" :sponsorships="sponsorships ?? []" />
                     </div>
                 </div>

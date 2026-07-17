@@ -27,15 +27,17 @@ class PoiController extends Controller
             ->published()
             ->where('slug', $slug)
             ->with(['categories:id,slug,name,color,icon', 'photos', 'tags:id,slug,name'])
-            ->firstOrFail();
+            ->firstOrFail()
+            ->append('primary_photo_url');
 
         $related = Poi::query()
             ->published()
             ->where('id', '!=', $poi->id)
             ->whereHas('categories', fn ($q) => $q->whereIn('id', $poi->categories->pluck('id')))
-            ->with('categories:id,slug,name,color,icon')
+            ->with(['categories:id,slug,name,color,icon', 'photos'])
             ->limit(4)
-            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'rating']);
+            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'rating'])
+            ->each->append('primary_photo_url');
 
         $reviews = $poi->reviews()
             ->with('user:id,name')

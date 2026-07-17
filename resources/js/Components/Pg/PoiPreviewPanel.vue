@@ -25,7 +25,7 @@ const navigateUrl = computed(() =>
     <Transition name="slide-up">
         <div
             v-if="visible && poi"
-            class="absolute inset-x-0 bottom-0 z-[500] rounded-t-3xl bg-pg-surface shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:bottom-4 lg:left-4 lg:right-auto lg:w-96 lg:rounded-2xl"
+            class="absolute inset-x-0 z-[600] rounded-t-3xl bg-pg-surface shadow-[0_-8px_30px_rgba(0,0,0,0.12)] bottom-0 lg:bottom-4 lg:left-4 lg:right-auto lg:w-96 lg:rounded-2xl"
         >
             <div class="flex justify-center pt-2 lg:hidden">
                 <div class="h-1 w-10 rounded-full bg-gray-200" />

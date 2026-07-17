@@ -80,6 +80,19 @@ const shareUrl = () => {
 
                 <p class="mt-4 text-sm leading-relaxed text-pg-muted">{{ poi.description }}</p>
 
+                <section v-if="poi.photos?.length > 1" class="mt-6">
+                    <h2 class="mb-3 font-semibold">Galleria</h2>
+                    <div class="flex gap-2 overflow-x-auto pb-1">
+                        <img
+                            v-for="photo in poi.photos"
+                            :key="photo.id"
+                            :src="photo.url"
+                            :alt="poi.name"
+                            class="h-24 w-32 shrink-0 rounded-xl object-cover"
+                        />
+                    </div>
+                </section>
+
                 <section class="mt-6">
                     <h2 class="mb-3 font-semibold">Informazioni</h2>
                     <div class="grid grid-cols-3 gap-3">

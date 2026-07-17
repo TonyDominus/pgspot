@@ -46,6 +46,9 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::get('/pois/{poi}/edit', [AdminPoiController::class, 'edit'])->name('pois.edit');
     Route::put('/pois/{poi}', [AdminPoiController::class, 'update'])->name('pois.update');
     Route::delete('/pois/{poi}', [AdminPoiController::class, 'destroy'])->name('pois.destroy');
+    Route::post('/pois/{poi}/photos', [AdminPoiController::class, 'storePhoto'])->name('pois.photos.store');
+    Route::delete('/pois/{poi}/photos/{photo}', [AdminPoiController::class, 'destroyPhoto'])->name('pois.photos.destroy');
+    Route::post('/pois/{poi}/photos/{photo}/primary', [AdminPoiController::class, 'setPrimaryPhoto'])->name('pois.photos.primary');
     Route::get('/contributions', [AdminContributionController::class, 'index'])->name('contributions.index');
     Route::post('/contributions/{contribution}/approve', [AdminContributionController::class, 'approve'])->name('contributions.approve');
     Route::post('/contributions/{contribution}/reject', [AdminContributionController::class, 'reject'])->name('contributions.reject');

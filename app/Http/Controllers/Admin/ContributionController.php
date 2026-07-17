@@ -8,14 +8,19 @@ use App\Enums\PoiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Poi;
+use App\Models\PoiPhoto;
+use App\Services\PoiPhotoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ContributionController extends Controller
 {
+    public function __construct(private PoiPhotoService $photos) {}
+
     public function index(Request $request): Response
     {
         $contributions = Contribution::query()
@@ -24,6 +29,13 @@ class ContributionController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
+
+        $contributions->getCollection()->transform(function (Contribution $contribution) {
+            $payload = $contribution->payload ?? [];
+            $contribution->photo_preview_url = PoiPhotoService::publicUrl($payload['photo_path'] ?? null);
+
+            return $contribution;
+        });
 
         return Inertia::render('Admin/Contributions/Index', [
             'contributions' => $contributions,
@@ -41,6 +53,10 @@ class ContributionController extends Controller
         $payload = $contribution->payload;
 
         if ($contribution->type === ContributionType::NewPoi) {
+            if (empty($payload['photo_path'])) {
+                return back()->with('error', 'Impossibile approvare: manca la foto del luogo.');
+            }
+
             $poi = Poi::query()->create([
                 'name' => $payload['name'],
                 'slug' => Str::slug($payload['name']).'-'.Str::random(4),
@@ -56,6 +72,12 @@ class ContributionController extends Controller
             if (! empty($payload['category_id'])) {
                 $poi->categories()->sync([$payload['category_id']]);
             }
+
+            $this->photos->attachFromPath($poi, $payload['photo_path'], true, $contribution->user_id);
+
+            foreach ($payload['extra_photo_paths'] ?? [] as $extraPath) {
+                $this->photos->attachFromPath($poi, $extraPath, false, $contribution->user_id);
+            }
         }
 
         $contribution->update([
@@ -70,6 +92,11 @@ class ContributionController extends Controller
     public function reject(Request $request, Contribution $contribution): RedirectResponse
     {
         $request->validate(['rejection_reason' => 'nullable|string|max:500']);
+
+        $payload = $contribution->payload ?? [];
+        foreach (array_filter([$payload['photo_path'] ?? null, ...($payload['extra_photo_paths'] ?? [])]) as $path) {
+            Storage::disk('public')->delete($path);
+        }
 
         $contribution->update([
             'status' => ContributionStatus::Rejected,

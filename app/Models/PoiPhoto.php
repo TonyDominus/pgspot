@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\PoiPhotoService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PoiPhoto extends Model
 {
+    protected $appends = ['url'];
+
     protected $fillable = [
         'poi_id',
         'path',
@@ -31,5 +34,10 @@ class PoiPhoto extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function getUrlAttribute(): ?string
+    {
+        return PoiPhotoService::publicUrl($this->path);
     }
 }

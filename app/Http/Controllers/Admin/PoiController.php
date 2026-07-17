@@ -6,6 +6,8 @@ use App\Enums\PoiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Poi;
+use App\Models\PoiPhoto;
+use App\Services\PoiPhotoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +15,8 @@ use Inertia\Response;
 
 class PoiController extends Controller
 {
+    public function __construct(private PoiPhotoService $photos) {}
+
     public function index(Request $request): Response
     {
         $sort = $request->string('sort', 'name')->toString();
@@ -24,7 +28,7 @@ class PoiController extends Controller
         }
 
         $pois = Poi::query()
-            ->with(['categories:id,name,color', 'creator:id,name'])
+            ->with(['categories:id,name,color', 'creator:id,name', 'photos'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('q'), function ($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->q.'%');
@@ -32,6 +36,8 @@ class PoiController extends Controller
             ->orderBy($sort, $dir)
             ->paginate(20)
             ->withQueryString();
+
+        $pois->getCollection()->each->append('primary_photo_url');
 
         return Inertia::render('Admin/Pois/Index', [
             'pois' => $pois,
@@ -42,10 +48,10 @@ class PoiController extends Controller
 
     public function edit(Poi $poi): Response
     {
-        $poi->load('categories:id');
+        $poi->load(['categories:id', 'photos']);
 
         return Inertia::render('Admin/Pois/Form', [
-            'poi' => $poi,
+            'poi' => $poi->append('primary_photo_url'),
             'categories' => Category::query()->active()->get(['id', 'name', 'slug']),
             'statuses' => collect(PoiStatus::cases())->map(fn ($s) => $s->value),
         ]);
@@ -80,8 +86,48 @@ class PoiController extends Controller
 
     public function destroy(Poi $poi): RedirectResponse
     {
+        $photos = $poi->photos()->get();
+        foreach ($photos as $photo) {
+            $this->photos->delete($photo);
+        }
+
         $poi->delete();
 
         return redirect()->route('admin.pois.index')->with('success', 'POI eliminato.');
+    }
+
+    public function storePhoto(Request $request, Poi $poi): RedirectResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'is_primary' => 'boolean',
+        ]);
+
+        $this->photos->storeForPoi(
+            $poi,
+            $request->file('photo'),
+            $request->boolean('is_primary'),
+            $request->user(),
+        );
+
+        return back()->with('success', 'Foto caricata.');
+    }
+
+    public function destroyPhoto(Poi $poi, PoiPhoto $photo): RedirectResponse
+    {
+        abort_unless($photo->poi_id === $poi->id, 404);
+
+        $this->photos->delete($photo);
+
+        return back()->with('success', 'Foto eliminata.');
+    }
+
+    public function setPrimaryPhoto(Poi $poi, PoiPhoto $photo): RedirectResponse
+    {
+        abort_unless($photo->poi_id === $poi->id, 404);
+
+        $this->photos->setPrimary($photo);
+
+        return back()->with('success', 'Foto principale aggiornata.');
     }
 }

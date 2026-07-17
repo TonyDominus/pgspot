@@ -7,6 +7,8 @@ const props = defineProps({
     poi: Object,
 });
 
+const imageUrl = computed(() => props.poi?.primary_photo_url ?? props.poi?.photos?.[0]?.url ?? null);
+
 const gradient = computed(() => {
     const cat = props.poi?.categories?.[0];
     const color = cat?.color ?? categoryMeta.panorami?.color ?? '#2E7D32';
@@ -20,7 +22,14 @@ const icon = computed(() => {
 </script>
 
 <template>
+    <img
+        v-if="imageUrl"
+        :src="imageUrl"
+        :alt="poi?.name ?? 'Luogo'"
+        class="h-full w-full object-cover"
+    />
     <div
+        v-else
         class="flex h-full w-full items-center justify-center"
         :style="{ background: gradient }"
     >

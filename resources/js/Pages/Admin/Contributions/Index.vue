@@ -84,6 +84,12 @@ function typeLabel(type) {
                 </div>
 
                 <div v-if="c.payload" class="mt-3 rounded-xl bg-gray-50 p-3 text-sm">
+                    <img
+                        v-if="c.photo_preview_url"
+                        :src="c.photo_preview_url"
+                        :alt="c.payload.name"
+                        class="mb-3 max-h-48 w-full rounded-lg object-cover"
+                    />
                     <p v-if="c.payload.description">{{ c.payload.description }}</p>
                     <p v-if="c.payload.latitude" class="text-xs text-pg-muted">
                         {{ c.payload.latitude }}, {{ c.payload.longitude }}

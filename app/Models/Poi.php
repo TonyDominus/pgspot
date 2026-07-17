@@ -49,7 +49,18 @@ class Poi extends Model
 
     public function photos(): HasMany
     {
-        return $this->hasMany(PoiPhoto::class)->orderBy('sort_order');
+        return $this->hasMany(PoiPhoto::class)->orderByDesc('is_primary')->orderBy('sort_order');
+    }
+
+    public function getPrimaryPhotoUrlAttribute(): ?string
+    {
+        if (! $this->relationLoaded('photos')) {
+            return null;
+        }
+
+        $photo = $this->photos->firstWhere('is_primary', true) ?? $this->photos->first();
+
+        return $photo?->url;
     }
 
     public function tags(): BelongsToMany
