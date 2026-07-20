@@ -30,9 +30,20 @@ class AppSetting extends Model
 
     public static function setValue(string $key, mixed $value): void
     {
+        if ($value === null) {
+            static::query()->where('key', $key)->delete();
+
+            return;
+        }
+
         static::query()->updateOrCreate(
             ['key' => $key],
             ['value' => $value],
         );
+    }
+
+    public static function forget(string $key): void
+    {
+        static::query()->where('key', $key)->delete();
     }
 }

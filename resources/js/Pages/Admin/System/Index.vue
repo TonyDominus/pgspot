@@ -30,6 +30,16 @@ function formatDate(iso) {
             </button>
         </div>
 
+        <div v-if="health.warnings?.length" class="mb-4 space-y-2">
+            <div
+                v-for="(warning, index) in health.warnings"
+                :key="index"
+                class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            >
+                {{ warning }}
+            </div>
+        </div>
+
         <div class="grid gap-4 lg:grid-cols-2">
             <section class="pg-card space-y-3 p-6">
                 <h2 class="font-semibold text-pg-text">Applicazione</h2>
@@ -50,10 +60,14 @@ function formatDate(iso) {
                     </div>
                     <div class="flex justify-between gap-4">
                         <dt class="text-pg-muted">Health check</dt>
-                        <dd>
-                            <a :href="health.health_url" target="_blank" class="text-pg-primary underline">/up</a>
+                        <dd :class="health.health?.ok ? 'text-green-700' : 'text-pg-error'">
+                            {{ health.health?.ok ? 'OK' : 'Errore' }}
+                            <span class="text-pg-muted">({{ health.health?.status || '—' }})</span>
                         </dd>
                     </div>
+                    <p v-if="health.health?.message" class="text-xs text-pg-muted">
+                        {{ health.health.message }}
+                    </p>
                 </dl>
             </section>
 

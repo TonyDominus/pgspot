@@ -55,6 +55,6 @@ class SafeMail
 
     private static function clearLastError(): void
     {
-        AppSetting::setValue('system.last_mail_error', null);
+        AppSetting::forget('system.last_mail_error');
     }
 }

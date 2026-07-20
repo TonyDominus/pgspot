@@ -7,6 +7,8 @@ use App\Models\Contribution;
 use App\Models\Poi;
 use App\Models\User;
 use App\Support\SafeMail;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -62,8 +64,53 @@ class SystemHealthService
             ],
             'backup' => AppSetting::getValue('system.last_backup'),
             'last_mail_error' => SafeMail::lastError(),
-            'health_url' => url('/up'),
+            'health' => $this->healthCheck(),
+            'warnings' => $this->warnings(),
         ];
+    }
+
+    private function healthCheck(): array
+    {
+        try {
+            $response = app(Kernel::class)->handle(Request::create('/up', 'GET'));
+            $body = json_decode($response->getContent(), true);
+
+            return [
+                'ok' => $response->isOk(),
+                'status' => $response->getStatusCode(),
+                'message' => is_array($body) ? ($body['message'] ?? null) : null,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'status' => 0,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /** @return list<string> */
+    private function warnings(): array
+    {
+        $warnings = [];
+
+        if (config('app.env') !== 'production') {
+            $warnings[] = 'APP_ENV non è "production" — imposta APP_ENV=production nel .env e riesegui config:cache.';
+        }
+
+        if (config('app.debug')) {
+            $warnings[] = 'APP_DEBUG è attivo — disattivalo in produzione (APP_DEBUG=false).';
+        }
+
+        if (! is_writable(storage_path())) {
+            $warnings[] = 'storage/ non è scrivibile — i log e le email possono fallire.';
+        }
+
+        if (! is_writable(base_path('bootstrap/cache'))) {
+            $warnings[] = 'bootstrap/cache non è scrivibile — config:cache e deploy falliranno.';
+        }
+
+        return $warnings;
     }
 
     private function databaseConnected(): bool
