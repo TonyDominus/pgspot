@@ -10,6 +10,7 @@ import PoiListCard from '@/Components/Pg/PoiListCard.vue';
 import PoiPreviewPanel from '@/Components/Pg/PoiPreviewPanel.vue';
 import SponsoredCard from '@/Components/Pg/SponsoredCard.vue';
 import PgIcon from '@/Components/Icons/PgIcon.vue';
+import SeoHead from '@/Components/Pg/SeoHead.vue';
 import { withDistance } from '@/utils/geo';
 
 const props = defineProps({
@@ -22,6 +23,7 @@ const props = defineProps({
     canContribute: Boolean,
     sponsorships: Array,
     featuredSponsorships: Array,
+    seo: Object,
 });
 
 const sponsoredPoiIds = computed(() =>
@@ -100,7 +102,8 @@ watch(searchQuery, (val) => {
 </script>
 
 <template>
-    <Head title="Esplora" />
+    <SeoHead v-if="seo" :seo="seo" />
+    <Head v-else title="Esplora" />
 
     <AppShell active-nav="explore" full-width hide-footer no-padding v-slot="{ openMenu }">
             <div class="relative flex h-[100dvh] flex-col lg:grid lg:h-[calc(100dvh)] lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">

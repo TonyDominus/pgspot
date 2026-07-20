@@ -8,6 +8,7 @@ import PoiListCard from '@/Components/Pg/PoiListCard.vue';
 import FavoriteButton from '@/Components/Pg/FavoriteButton.vue';
 import ReviewForm from '@/Components/Pg/ReviewForm.vue';
 import PgIcon from '@/Components/Icons/PgIcon.vue';
+import SeoHead from '@/Components/Pg/SeoHead.vue';
 
 const props = defineProps({
     poi: Object,
@@ -15,6 +16,7 @@ const props = defineProps({
     reviews: Array,
     userReview: Object,
     mapCenter: Object,
+    seo: Object,
 });
 
 const tags = computed(() => {
@@ -41,7 +43,8 @@ const shareUrl = () => {
 </script>
 
 <template>
-    <Head :title="poi.name" />
+    <SeoHead v-if="seo" :seo="seo" />
+    <Head v-else :title="poi.name" />
 
     <AppShell active-nav="explore">
         <div class="mx-auto max-w-3xl overflow-hidden lg:rounded-2xl lg:bg-pg-surface lg:shadow-card">

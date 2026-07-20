@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import CookieConsent from '@/Components/Pg/CookieConsent.vue';
 </script>
 
 <template>
@@ -12,5 +13,6 @@ import { Link } from '@inertiajs/vue3';
         <div class="w-full max-w-md overflow-hidden rounded-2xl bg-pg-surface px-6 py-6 shadow-card">
             <slot />
         </div>
+        <CookieConsent />
     </div>
 </template>

@@ -60,6 +60,9 @@ class HandleInertiaRequests extends Middleware
             'features' => fn () => [
                 'events_public' => \App\Support\SiteFeatures::eventsPublicEnabled(),
             ],
+            'analytics' => fn () => [
+                'ga_id' => AppSetting::getValue('site.analytics', [])['ga_id'] ?? '',
+            ],
         ];
     }
 }

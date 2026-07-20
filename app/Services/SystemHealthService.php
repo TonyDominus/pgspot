@@ -63,6 +63,11 @@ class SystemHealthService
             'backup' => AppSetting::getValue('system.last_backup'),
             'last_mail_error' => SafeMail::lastError(),
             'health' => $this->healthCheck(),
+            'last_test_mail' => AppSetting::getValue('system.last_test_mail'),
+            'tests' => [
+                'last_run' => AppSetting::getValue('system.last_tests_run'),
+                'expected_total' => 36,
+            ],
             'warnings' => $this->warnings(),
         ];
     }

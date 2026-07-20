@@ -26,6 +26,7 @@ class SettingsController extends Controller
                 'legal_cookies' => $this->legalBody('legal.cookies'),
                 'legal_contact' => $this->legalBody('legal.contact'),
                 'events_public' => (bool) AppSetting::getValue('features.events_public', true),
+                'ga_measurement_id' => AppSetting::getValue('site.analytics', [])['ga_id'] ?? '',
             ],
         ]);
     }
@@ -46,6 +47,7 @@ class SettingsController extends Controller
             'legal_cookies' => 'nullable|string|max:50000',
             'legal_contact' => 'nullable|string|max:50000',
             'events_public' => 'boolean',
+            'ga_measurement_id' => 'nullable|string|max:32|regex:/^(G-[A-Z0-9]+)?$/',
         ]);
 
         AppSetting::setValue('app.tagline', $validated['tagline']);
@@ -66,6 +68,9 @@ class SettingsController extends Controller
         AppSetting::setValue('legal.cookies', ['body' => $validated['legal_cookies'] ?? '']);
         AppSetting::setValue('legal.contact', ['body' => $validated['legal_contact'] ?? '']);
         AppSetting::setValue('features.events_public', $request->boolean('events_public'));
+        AppSetting::setValue('site.analytics', [
+            'ga_id' => $validated['ga_measurement_id'] ?? '',
+        ]);
 
         return back()->with('success', 'Impostazioni salvate.');
     }

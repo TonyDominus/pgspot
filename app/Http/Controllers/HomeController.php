@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\Event;
+use App\Support\Seo;
 use App\Support\SiteFeatures;
 use App\Services\PoiListingService;
 use App\Services\SponsorshipService;
@@ -37,6 +38,7 @@ class HomeController extends Controller
             'sponsorships' => $this->sponsorships->activeForPlacement('home_sheet'),
             'featuredSponsorships' => $this->sponsorships->activeForPlacement('home_list'),
             'canContribute' => (bool) $request->user(),
+            'seo' => Seo::forHome(),
         ]);
     }
 

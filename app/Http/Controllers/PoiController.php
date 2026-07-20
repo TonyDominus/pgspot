@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\Poi;
+use App\Support\Seo;
 use App\Services\PoiListingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,6 +55,7 @@ class PoiController extends Controller
             'reviews' => $reviews,
             'userReview' => $userReview,
             'mapCenter' => AppSetting::getValue('app.default_center'),
+            'seo' => Seo::forPoi($poi),
         ]);
     }
 }

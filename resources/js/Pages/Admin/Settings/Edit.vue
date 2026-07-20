@@ -20,6 +20,7 @@ const form = useForm({
     legal_cookies: props.settings.legal_cookies,
     legal_contact: props.settings.legal_contact,
     events_public: props.settings.events_public ?? true,
+    ga_measurement_id: props.settings.ga_measurement_id ?? '',
 });
 
 function submit() {
@@ -82,6 +83,15 @@ function submit() {
                         <label class="mb-1 block text-sm font-medium">Facebook</label>
                         <input v-model="form.facebook" type="url" class="pg-input" placeholder="https://facebook.com/..." />
                     </div>
+                </div>
+            </section>
+
+            <section class="pg-card space-y-4 p-6">
+                <h2 class="font-semibold text-pg-text">Analytics</h2>
+                <p class="text-xs text-pg-muted">Google Analytics 4 — attivo solo dopo consenso cookie dell'utente.</p>
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Measurement ID (es. G-XXXXXXXXXX)</label>
+                    <input v-model="form.ga_measurement_id" type="text" class="pg-input font-mono" placeholder="G-XXXXXXXXXX" />
                 </div>
             </section>
 

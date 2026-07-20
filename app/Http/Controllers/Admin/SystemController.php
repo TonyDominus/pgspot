@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Notifications\TestMailNotification;
 use App\Support\SafeMail;
 use App\Services\SystemHealthService;
@@ -29,6 +30,11 @@ class SystemController extends Controller
 
             return back()->with('error', 'Invio fallito: '.$error);
         }
+
+        AppSetting::setValue('system.last_test_mail', [
+            'at' => now()->toIso8601String(),
+            'to' => $request->user()->email,
+        ]);
 
         return back()->with('success', 'Email di test inviata a '.$request->user()->email);
     }

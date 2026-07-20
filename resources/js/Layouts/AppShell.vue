@@ -6,6 +6,7 @@ import PageTransition from '@/Components/Pg/PageTransition.vue';
 import SideMenu from '@/Components/Pg/SideMenu.vue';
 import SiteFooter from '@/Components/Pg/SiteFooter.vue';
 import FlashToast from '@/Components/Pg/FlashToast.vue';
+import CookieConsent from '@/Components/Pg/CookieConsent.vue';
 
 defineProps({
     activeNav: { type: String, default: 'explore' },
@@ -44,5 +45,6 @@ const openMenu = () => {
 
         <SideMenu :open="menuOpen" @close="menuOpen = false" />
         <FlashToast />
+        <CookieConsent />
     </div>
 </template>

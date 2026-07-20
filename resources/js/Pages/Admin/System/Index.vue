@@ -102,9 +102,39 @@ function formatDate(iso) {
                             {{ health.mail.resend_configured ? 'Configurata' : 'Mancante' }}
                         </dd>
                     </div>
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-pg-muted">Ultimo test email</dt>
+                        <dd class="font-medium">{{ formatDate(health.last_test_mail?.at) }}</dd>
+                    </div>
+                    <div v-if="health.last_test_mail?.to" class="text-xs text-pg-muted">
+                        Inviato a {{ health.last_test_mail.to }}
+                    </div>
                 </dl>
                 <p class="text-xs text-pg-muted">
-                    Puoi riusare la stessa API key Resend dell'altro sito sulla VPS. Verifica il dominio pgspot.it su Resend e imposta MAIL_FROM con un indirizzo di quel dominio.
+                    Verifica il dominio pgspot.it su Resend e usa MAIL_FROM con indirizzo @pgspot.it.
+                </p>
+            </section>
+
+            <section class="pg-card space-y-3 p-6">
+                <h2 class="font-semibold text-pg-text">Test automatici</h2>
+                <dl class="space-y-2 text-sm">
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-pg-muted">Suite PHPUnit</dt>
+                        <dd class="font-medium">{{ health.tests?.expected_total ?? '—' }} test</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-pg-muted">Ultimo run</dt>
+                        <dd class="font-medium">{{ formatDate(health.tests?.last_run?.at) }}</dd>
+                    </div>
+                    <div v-if="health.tests?.last_run?.passed != null" class="flex justify-between gap-4">
+                        <dt class="text-pg-muted">Esito</dt>
+                        <dd class="font-medium text-green-700">
+                            {{ health.tests.last_run.passed }}/{{ health.tests.last_run.total }} passati
+                        </dd>
+                    </div>
+                </dl>
+                <p class="text-xs text-pg-muted">
+                    In locale/CI: <code class="rounded bg-pg-background px-1">composer test</code>
                 </p>
             </section>
 
