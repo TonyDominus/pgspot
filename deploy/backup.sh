@@ -10,12 +10,23 @@ APP_DIR="${PGSPOT_DIR:-/var/www/pgspot}"
 BACKUP_DIR="${PGSPOT_BACKUP_DIR:-/var/backups/pgspot}"
 KEEP_DAYS="${PGSPOT_BACKUP_KEEP_DAYS:-14}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+RUN_USER="$(id -un)"
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR" 2>/dev/null || sudo mkdir -p "$BACKUP_DIR"
+
+if [[ ! -w "$BACKUP_DIR" ]]; then
+    sudo chown "$RUN_USER:$RUN_USER" "$BACKUP_DIR"
+    sudo chmod 755 "$BACKUP_DIR"
+fi
+
+if [[ ! -w "$BACKUP_DIR" ]]; then
+    echo "Errore: $BACKUP_DIR non scrivibile per $RUN_USER"
+    echo "Esegui: sudo mkdir -p $BACKUP_DIR && sudo chown $RUN_USER:$RUN_USER $BACKUP_DIR"
+    exit 1
+fi
 
 cd "$APP_DIR"
 
-# Carica credenziali DB da .env
 if [[ ! -f .env ]]; then
     echo "Errore: .env non trovato in $APP_DIR"
     exit 1
@@ -32,7 +43,7 @@ STORAGE_FILE="$BACKUP_DIR/storage_${TIMESTAMP}.tar.gz"
 echo "[$(date -Iseconds)] Avvio backup PG Spot"
 
 export MYSQL_PWD="$DB_PASSWORD"
-mysqldump -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" | gzip > "$DB_FILE"
+mysqldump --no-tablespaces -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" | gzip > "$DB_FILE"
 unset MYSQL_PWD
 
 if [[ -d storage/app/public ]]; then
@@ -42,10 +53,15 @@ else
     STORAGE_FILE=""
 fi
 
+ARTISAN="php artisan"
+if [[ ! -w storage/logs || ! -w bootstrap/cache ]]; then
+    ARTISAN="sudo -u www-data php artisan"
+fi
+
 if [[ -n "$STORAGE_FILE" ]]; then
-    php artisan pgspot:record-backup "$DB_FILE" --storage="$STORAGE_FILE" --type=cron
+    $ARTISAN pgspot:record-backup "$DB_FILE" --storage="$STORAGE_FILE" --type=cron
 else
-    php artisan pgspot:record-backup "$DB_FILE" --type=cron
+    $ARTISAN pgspot:record-backup "$DB_FILE" --type=cron
 fi
 
 find "$BACKUP_DIR" -type f -mtime +"$KEEP_DAYS" -delete

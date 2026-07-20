@@ -7,8 +7,6 @@ use App\Models\Contribution;
 use App\Models\Poi;
 use App\Models\User;
 use App\Support\SafeMail;
-use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -71,22 +69,15 @@ class SystemHealthService
 
     private function healthCheck(): array
     {
-        try {
-            $response = app(Kernel::class)->handle(Request::create('/up', 'GET'));
-            $body = json_decode($response->getContent(), true);
+        $ok = $this->databaseConnected()
+            && is_writable(storage_path())
+            && is_writable(base_path('bootstrap/cache'));
 
-            return [
-                'ok' => $response->isOk(),
-                'status' => $response->getStatusCode(),
-                'message' => is_array($body) ? ($body['message'] ?? null) : null,
-            ];
-        } catch (\Throwable $e) {
-            return [
-                'ok' => false,
-                'status' => 0,
-                'message' => $e->getMessage(),
-            ];
-        }
+        return [
+            'ok' => $ok,
+            'status' => $ok ? 200 : 503,
+            'message' => $ok ? 'Applicazione operativa' : 'Controlli interni falliti',
+        ];
     }
 
     /** @return list<string> */

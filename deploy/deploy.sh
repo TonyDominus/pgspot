@@ -32,12 +32,8 @@ php artisan optimize:clear
 php artisan config:cache
 php artisan view:cache
 
-if php artisan route:cache; then
-    echo "==> Route cache OK"
-else
-    echo "==> ATTENZIONE: route:cache fallito, pulizia e proseguo senza route cache"
-    php artisan route:clear || true
-fi
+echo "==> Route cache disabilitato (Inertia/Ziggy — evita pagine bianche al refresh)"
+php artisan route:clear || true
 
 php artisan storage:link 2>/dev/null || true
 
