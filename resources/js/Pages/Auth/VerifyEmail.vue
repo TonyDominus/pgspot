@@ -31,6 +31,10 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
             Un nuovo link di verifica è stato inviato al tuo indirizzo email.
         </p>
 
+        <p v-if="$page.props.flash?.error" class="mb-4 text-sm font-medium text-pg-error">
+            {{ $page.props.flash.error }}
+        </p>
+
         <form @submit.prevent="submit">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <button type="submit" class="pg-btn-primary" :disabled="form.processing">

@@ -57,6 +57,9 @@ class HandleInertiaRequests extends Middleware
                 'facebook' => AppSetting::getValue('site.social', [])['facebook'] ?? '',
                 'email' => AppSetting::getValue('site.contact', [])['email'] ?? 'info@pgspot.it',
             ],
+            'features' => fn () => [
+                'events_public' => \App\Support\SiteFeatures::eventsPublicEnabled(),
+            ],
         ];
     }
 }

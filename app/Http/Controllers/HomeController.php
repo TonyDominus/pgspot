@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\Event;
+use App\Support\SiteFeatures;
 use App\Services\PoiListingService;
 use App\Services\SponsorshipService;
 use Illuminate\Http\Request;
@@ -19,13 +20,15 @@ class HomeController extends Controller
 
     public function index(Request $request): Response
     {
-        $featuredEvents = Event::query()
-            ->published()
-            ->featured()
-            ->where('starts_at', '>=', now()->subDay())
-            ->orderBy('starts_at')
-            ->limit(3)
-            ->get(['id', 'title', 'slug', 'description', 'starts_at', 'image']);
+        $featuredEvents = SiteFeatures::eventsPublicEnabled()
+            ? Event::query()
+                ->published()
+                ->featured()
+                ->where('starts_at', '>=', now()->subDay())
+                ->orderBy('starts_at')
+                ->limit(3)
+                ->get(['id', 'title', 'slug', 'description', 'starts_at', 'image'])
+            : collect();
 
         return Inertia::render('Home', [
             ...$this->listing->getPageData($request),

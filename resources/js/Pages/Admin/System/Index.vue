@@ -184,6 +184,15 @@ function formatDate(iso) {
                 </dl>
             </section>
 
+            <section v-if="health.last_mail_error" class="pg-card space-y-3 border-pg-error/30 bg-red-50/50 p-6 lg:col-span-2">
+                <h2 class="font-semibold text-pg-error">Ultimo errore email</h2>
+                <p class="text-sm text-pg-text">{{ health.last_mail_error.message }}</p>
+                <p class="text-xs text-pg-muted">{{ formatDate(health.last_mail_error.at) }}</p>
+                <p class="text-xs text-pg-muted">
+                    Verifica: dominio pgspot.it verificato su Resend, <code>MAIL_FROM_ADDRESS</code> coerente, <code>php artisan config:cache</code> dopo modifiche al .env.
+                </p>
+            </section>
+
             <section class="pg-card space-y-3 p-6">
                 <h2 class="font-semibold text-pg-text">Ultimo backup</h2>
                 <dl class="space-y-2 text-sm">

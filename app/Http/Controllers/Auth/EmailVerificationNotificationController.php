@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\SafeMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,9 @@ class EmailVerificationNotificationController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        if (! SafeMail::sendVerification($request->user())) {
+            return back()->with('error', 'Impossibile inviare l\'email. Verifica la configurazione Resend in Admin → Monitoraggio.');
+        }
 
         return back()->with('status', 'verification-link-sent');
     }

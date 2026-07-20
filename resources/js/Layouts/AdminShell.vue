@@ -15,6 +15,7 @@ const navItems = computed(() => {
         { href: 'admin.dashboard', icon: 'compass', label: 'Dashboard' },
         { href: 'admin.pois.index', icon: 'location', label: 'POI' },
         { href: 'admin.contributions.index', icon: 'filter', label: 'Moderazione' },
+        { href: 'admin.reviews.index', icon: 'alert', label: 'Recensioni' },
         { href: 'admin.sponsorships.index', icon: 'star', label: 'Sponsor' },
         { href: 'admin.events.index', icon: 'bell', label: 'Eventi' },
         { href: 'admin.itineraries.index', icon: 'route', label: 'Itinerari' },

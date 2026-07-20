@@ -12,16 +12,25 @@ const emit = defineEmits(['close']);
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const isAdmin = computed(() => ['admin', 'superadmin'].includes(user.value?.role));
+const eventsPublic = computed(() => page.props.features?.events_public ?? false);
 
-const links = computed(() => [
-    { href: 'home', label: 'Esplora', icon: 'compass' },
-    { href: 'poi.index', label: 'Lista luoghi', icon: 'list' },
-    { href: 'filters', label: 'Filtri', icon: 'filter' },
-    { href: 'favorites', label: 'Preferiti', icon: 'heart', auth: true },
-    { href: 'routes', label: 'Itinerari', icon: 'route' },
-    { href: 'contribute.create', label: 'Aggiungi luogo', icon: 'plus', auth: true },
-    { href: 'profile.edit', label: 'Profilo', icon: 'user', auth: true },
-]);
+const links = computed(() => {
+    const items = [
+        { href: 'home', label: 'Esplora', icon: 'compass' },
+        { href: 'poi.index', label: 'Lista luoghi', icon: 'list' },
+        { href: 'filters', label: 'Filtri', icon: 'filter' },
+        { href: 'favorites', label: 'Preferiti', icon: 'heart', auth: true },
+        { href: 'routes', label: 'Itinerari', icon: 'route' },
+    ];
+    if (eventsPublic.value) {
+        items.push({ href: 'events.index', label: 'Eventi', icon: 'bell' });
+    }
+    items.push(
+        { href: 'contribute.create', label: 'Aggiungi luogo', icon: 'plus', auth: true },
+        { href: 'profile.edit', label: 'Profilo', icon: 'user', auth: true },
+    );
+    return items;
+});
 </script>
 
 <template>

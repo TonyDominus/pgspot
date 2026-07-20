@@ -19,6 +19,7 @@ const form = useForm({
     legal_terms: props.settings.legal_terms,
     legal_cookies: props.settings.legal_cookies,
     legal_contact: props.settings.legal_contact,
+    events_public: props.settings.events_public ?? true,
 });
 
 function submit() {
@@ -82,6 +83,14 @@ function submit() {
                         <input v-model="form.facebook" type="url" class="pg-input" placeholder="https://facebook.com/..." />
                     </div>
                 </div>
+            </section>
+
+            <section class="pg-card space-y-4 p-6">
+                <h2 class="font-semibold text-pg-text">Funzionalità</h2>
+                <label class="flex items-center gap-3 text-sm">
+                    <input v-model="form.events_public" type="checkbox" class="rounded border-gray-300 text-pg-primary" />
+                    <span>Mostra sezione eventi pubblica su <code>/eventi</code> e banner in home</span>
+                </label>
             </section>
 
             <section class="pg-card space-y-4 p-6">

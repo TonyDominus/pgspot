@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Support\SafeMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,9 +51,12 @@ class RegisteredUserController extends Controller
             'notify_poi_updates' => $request->boolean('notify_poi_updates'),
         ]);
 
-        event(new Registered($user));
-
         Auth::login($user);
+
+        if (! SafeMail::sendVerification($user)) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Account creato, ma l\'invio email è fallito. Clicca "Reinvia email di verifica" o controlla Admin → Monitoraggio.');
+        }
 
         return redirect()->route('verification.notice');
     }

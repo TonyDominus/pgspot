@@ -11,14 +11,21 @@ const page = usePage();
 const isLoggedIn = computed(() => !!page.props.auth?.user);
 const user = computed(() => page.props.auth?.user);
 const isAdmin = computed(() => ['admin', 'superadmin'].includes(user.value?.role));
+const eventsPublic = computed(() => page.props.features?.events_public ?? false);
 
-const items = [
-    { id: 'explore', href: 'home', icon: 'compass', label: 'Esplora' },
-    { id: 'favorites', href: 'favorites', icon: 'heart', label: 'Preferiti', auth: true },
-    { id: 'contribute', href: 'contribute.create', icon: 'plus', label: 'Aggiungi', auth: true, fab: true },
-    { id: 'routes', href: 'routes', icon: 'route', label: 'Itinerari' },
-    { id: 'profile', href: 'profile.edit', icon: 'user', label: 'Profilo', auth: true },
-];
+const items = computed(() => {
+    const nav = [
+        { id: 'explore', href: 'home', icon: 'compass', label: 'Esplora' },
+        { id: 'favorites', href: 'favorites', icon: 'heart', label: 'Preferiti', auth: true },
+        { id: 'contribute', href: 'contribute.create', icon: 'plus', label: 'Aggiungi', auth: true, fab: true },
+        { id: 'routes', href: 'routes', icon: 'route', label: 'Itinerari' },
+    ];
+    if (eventsPublic.value) {
+        nav.splice(3, 0, { id: 'events', href: 'events.index', icon: 'bell', label: 'Eventi' });
+    }
+    nav.push({ id: 'profile', href: 'profile.edit', icon: 'user', label: 'Profilo', auth: true });
+    return nav;
+});
 </script>
 
 <template>

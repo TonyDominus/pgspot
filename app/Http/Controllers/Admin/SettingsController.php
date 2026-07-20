@@ -25,6 +25,7 @@ class SettingsController extends Controller
                 'legal_terms' => $this->legalBody('legal.terms'),
                 'legal_cookies' => $this->legalBody('legal.cookies'),
                 'legal_contact' => $this->legalBody('legal.contact'),
+                'events_public' => (bool) AppSetting::getValue('features.events_public', true),
             ],
         ]);
     }
@@ -44,6 +45,7 @@ class SettingsController extends Controller
             'legal_terms' => 'nullable|string|max:50000',
             'legal_cookies' => 'nullable|string|max:50000',
             'legal_contact' => 'nullable|string|max:50000',
+            'events_public' => 'boolean',
         ]);
 
         AppSetting::setValue('app.tagline', $validated['tagline']);
@@ -63,6 +65,7 @@ class SettingsController extends Controller
         AppSetting::setValue('legal.terms', ['body' => $validated['legal_terms'] ?? '']);
         AppSetting::setValue('legal.cookies', ['body' => $validated['legal_cookies'] ?? '']);
         AppSetting::setValue('legal.contact', ['body' => $validated['legal_contact'] ?? '']);
+        AppSetting::setValue('features.events_public', $request->boolean('events_public'));
 
         return back()->with('success', 'Impostazioni salvate.');
     }

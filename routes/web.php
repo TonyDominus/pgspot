@@ -6,10 +6,12 @@ use App\Http\Controllers\Admin\ContributionController as AdminContributionContro
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PoiController as AdminPoiController;
 use App\Http\Controllers\Admin\SponsorshipController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContributionController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItineraryController;
@@ -25,7 +27,9 @@ Route::get('/lista', [PoiController::class, 'index'])->name('poi.index');
 Route::get('/luoghi/{slug}', [PoiController::class, 'show'])->name('poi.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/luoghi/{slug}/recensioni', [ReviewController::class, 'store'])->name('poi.reviews.store');
+    Route::post('/luoghi/{slug}/recensioni', [ReviewController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('poi.reviews.store');
     Route::delete('/luoghi/{slug}/recensioni', [ReviewController::class, 'destroy'])->name('poi.reviews.destroy');
     Route::post('/luoghi/{slug}/preferiti', [FavoriteController::class, 'store'])->name('poi.favorites.store');
     Route::delete('/luoghi/{slug}/preferiti', [FavoriteController::class, 'destroy'])->name('poi.favorites.destroy');
@@ -34,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/filtri', [HomeController::class, 'filters'])->name('filters');
 Route::get('/itinerari', [ItineraryController::class, 'index'])->name('routes');
 Route::get('/itinerari/{slug}', [ItineraryController::class, 'show'])->name('itineraries.show');
+Route::get('/eventi', [EventController::class, 'index'])->name('events.index');
 
 Route::get('/legal/{page}', [PageController::class, 'legal'])->name('legal.show');
 
@@ -58,6 +63,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::resource('sponsorships', SponsorshipController::class)->except(['show']);
     Route::resource('events', AdminEventController::class)->except(['show']);
     Route::resource('itineraries', AdminItineraryController::class)->except(['show']);
+    Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+    Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {

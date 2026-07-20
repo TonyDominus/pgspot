@@ -164,11 +164,16 @@ watch(searchQuery, (val) => {
                         <div
                             v-for="event in featuredEvents.slice(0, 1)"
                             :key="event.id"
-                            class="rounded-2xl bg-pg-primary/95 p-3 text-white shadow-card backdrop-blur-sm"
                         >
-                            <p class="text-xs font-semibold uppercase tracking-wide opacity-80">Evento</p>
-                            <p class="mt-0.5 font-semibold">{{ event.title }}</p>
-                            <p v-if="event.description" class="mt-1 line-clamp-2 text-xs opacity-90">{{ event.description }}</p>
+                            <Link
+                                :href="route('events.index')"
+                                class="block rounded-2xl bg-pg-primary/95 p-3 text-white shadow-card backdrop-blur-sm transition hover:bg-pg-primary"
+                            >
+                                <p class="text-xs font-semibold uppercase tracking-wide opacity-80">Evento</p>
+                                <p class="mt-0.5 font-semibold">{{ event.title }}</p>
+                                <p v-if="event.description" class="mt-1 line-clamp-2 text-xs opacity-90">{{ event.description }}</p>
+                                <p class="mt-2 text-xs underline opacity-90">Tutti gli eventi →</p>
+                            </Link>
                         </div>
                     </div>
 

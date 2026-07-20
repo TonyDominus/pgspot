@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\TestMailNotification;
+use App\Support\SafeMail;
 use App\Services\SystemHealthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,11 @@ class SystemController extends Controller
 
     public function sendTestMail(Request $request): RedirectResponse
     {
-        $request->user()->notify(new TestMailNotification);
+        if (! SafeMail::send($request->user(), new TestMailNotification)) {
+            $error = SafeMail::lastError()['message'] ?? 'Errore sconosciuto';
+
+            return back()->with('error', 'Invio fallito: '.$error);
+        }
 
         return back()->with('success', 'Email di test inviata a '.$request->user()->email);
     }

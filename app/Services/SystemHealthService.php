@@ -6,6 +6,7 @@ use App\Models\AppSetting;
 use App\Models\Contribution;
 use App\Models\Poi;
 use App\Models\User;
+use App\Support\SafeMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -60,6 +61,7 @@ class SystemHealthService
                 'contributions_pending' => Contribution::query()->pending()->count(),
             ],
             'backup' => AppSetting::getValue('system.last_backup'),
+            'last_mail_error' => SafeMail::lastError(),
             'health_url' => url('/up'),
         ];
     }
