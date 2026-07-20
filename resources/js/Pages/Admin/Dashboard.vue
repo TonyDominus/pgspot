@@ -91,6 +91,37 @@ const isSuperAdmin = computed(() => usePage().props.auth?.user?.role === 'supera
                     <p class="text-sm text-pg-muted">Modifica, disattiva o elimina campagne</p>
                 </div>
             </Link>
+            <Link :href="route('admin.events.index')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+                    <PgIcon name="bell" class="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Eventi</p>
+                    <p class="text-sm text-pg-muted">Crea e gestisci eventi in evidenza</p>
+                </div>
+            </Link>
+            <Link :href="route('admin.itineraries.index')" class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50">
+                    <PgIcon name="route" class="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Itinerari</p>
+                    <p class="text-sm text-pg-muted">Percorsi con tappe POI</p>
+                </div>
+            </Link>
+            <Link
+                v-if="isSuperAdmin"
+                :href="route('admin.system.index')"
+                class="pg-card flex items-center gap-4 p-6 transition hover:shadow-md"
+            >
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
+                    <PgIcon name="alert" class="h-6 w-6 text-emerald-700" />
+                </div>
+                <div>
+                    <p class="font-semibold text-pg-text">Monitoraggio sistema</p>
+                    <p class="text-sm text-pg-muted">Email, backup, salute applicazione</p>
+                </div>
+            </Link>
             <Link
                 v-if="isSuperAdmin"
                 :href="route('admin.settings.edit')"

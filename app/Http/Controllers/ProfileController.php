@@ -37,7 +37,22 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'notify_contributions' => 'boolean',
+            'notify_poi_updates' => 'boolean',
+        ]);
+
+        $request->user()->update([
+            'notify_contributions' => $request->boolean('notify_contributions'),
+            'notify_poi_updates' => $request->boolean('notify_poi_updates'),
+        ]);
+
+        return Redirect::route('profile.edit')->with('status', 'notifications-updated');
     }
 
     /**

@@ -53,7 +53,7 @@ const closeModal = () => {
                     v-model="form.password"
                     type="password"
                     class="pg-input mt-4"
-                    placeholder="Password"
+                    placeholder="La tua password"
                     @keyup.enter="deleteUser"
                 />
                 <InputError :message="form.errors.password" class="mt-2" />

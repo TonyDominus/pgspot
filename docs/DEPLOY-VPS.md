@@ -80,10 +80,18 @@ SESSION_DRIVER=database
 CACHE_STORE=database
 QUEUE_CONNECTION=database
 
+# Email transazionali (Resend — riusa la stessa API key dell'altro sito)
+MAIL_MAILER=resend
+RESEND_API_KEY=re_xxxxxxxx
+MAIL_FROM_ADDRESS="noreply@tuodominio.it"
+MAIL_FROM_NAME="${APP_NAME}"
+
 # Cambia in produzione!
 SUPERADMIN_EMAIL=admin@tuodominio.it
 SUPERADMIN_PASSWORD=password_molto_sicura
 ```
+
+Verifica il dominio su [resend.com/domains](https://resend.com/domains) e aggiungi i record DNS richiesti. Puoi usare la stessa API key dell'altro progetto sulla VPS; l'importante è che `MAIL_FROM_ADDRESS` sia un indirizzo del dominio verificato (es. `noreply@pgspot.it`).
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -296,6 +304,57 @@ sudo chmod -R 775 storage bootstrap/cache
 
 ---
 
+---
+
+## 11. Backup
+
+Script incluso in `deploy/backup.sh` — dump MySQL compresso + archivio foto (`storage/app/public`).
+
+```bash
+chmod +x deploy/backup.sh
+sudo mkdir -p /var/backups/pgspot
+./deploy/backup.sh
+```
+
+Cron giornaliero (es. 3:00):
+
+```
+0 3 * * * /var/www/pgspot/deploy/backup.sh >> /var/log/pgspot-backup.log 2>&1
+```
+
+**Cosa salvare:**
+
+| Cosa | Come |
+|------|------|
+| Database | `deploy/backup.sh` (automatico) |
+| Foto POI | incluso nello script |
+| File `.env` | copia manuale fuori dal server (password, API key) |
+| Codice | già su GitHub |
+
+Conserva almeno 14 giorni di backup locali; idealmente copia periodica su storage esterno (S3, altro server, NAS).
+
+L'ultimo backup eseguito compare nel pannello **Admin → Monitoraggio** (superadmin).
+
+---
+
+## 12. Email transazionali
+
+PG Spot invia automaticamente:
+
+| Evento | Quando |
+|--------|--------|
+| Verifica account | Registrazione |
+| Benvenuto | Dopo verifica email |
+| Reset password | Richiesta recupero password |
+| Contributo approvato/rifiutato | Moderazione (se l'utente ha dato consenso) |
+| POI aggiornato | Modifica POI collegato (se consenso) |
+
+Test rapido: **Admin → Monitoraggio → Invia email di test**.
+
+Email marketing (report luoghi più visitati, newsletter): previste in una fase successiva.
+
+---
+
 ## Checklist rapida
 
 - [ ] Database creato
@@ -306,4 +365,6 @@ sudo chmod -R 775 storage bootstrap/cache
 - [ ] Nginx site abilitato
 - [ ] Certbot SSL attivo
 - [ ] Cron configurato
+- [ ] Resend configurato (`MAIL_MAILER=resend`, dominio verificato)
+- [ ] Backup cron attivo
 - [ ] Login admin funzionante

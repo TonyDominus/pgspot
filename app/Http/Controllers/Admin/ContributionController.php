@@ -8,7 +8,8 @@ use App\Enums\PoiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Contribution;
 use App\Models\Poi;
-use App\Models\PoiPhoto;
+use App\Notifications\ContributionApprovedNotification;
+use App\Notifications\ContributionRejectedNotification;
 use App\Services\PoiPhotoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class ContributionController extends Controller
         }
 
         $payload = $contribution->payload;
+        $poi = null;
 
         if ($contribution->type === ContributionType::NewPoi) {
             if (empty($payload['photo_path'])) {
@@ -86,6 +88,11 @@ class ContributionController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        $contribution->load('user');
+        if ($poi && $contribution->user?->wantsContributionNotifications()) {
+            $contribution->user->notify(new ContributionApprovedNotification($poi));
+        }
+
         return back()->with('success', 'Contributo approvato.');
     }
 
@@ -98,12 +105,22 @@ class ContributionController extends Controller
             Storage::disk('public')->delete($path);
         }
 
+        $poiName = $payload['name'] ?? 'Proposta';
+
         $contribution->update([
             'status' => ContributionStatus::Rejected,
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
             'rejection_reason' => $request->rejection_reason,
         ]);
+
+        $contribution->load('user');
+        if ($contribution->user?->wantsContributionNotifications()) {
+            $contribution->user->notify(new ContributionRejectedNotification(
+                $poiName,
+                $request->rejection_reason,
+            ));
+        }
 
         return back()->with('success', 'Contributo rifiutato.');
     }

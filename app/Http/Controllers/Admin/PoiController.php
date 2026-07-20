@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Poi;
 use App\Models\PoiPhoto;
+use App\Notifications\PoiUpdatedNotification;
 use App\Services\PoiPhotoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -80,6 +81,11 @@ class PoiController extends Controller
         ]);
 
         $poi->categories()->sync($validated['category_ids'] ?? []);
+
+        $poi->load('creator');
+        if ($poi->creator && $poi->creator->id !== $request->user()->id && $poi->creator->wantsPoiUpdateNotifications()) {
+            $poi->creator->notify(new PoiUpdatedNotification($poi));
+        }
 
         return redirect()->route('admin.pois.index')->with('success', 'POI aggiornato.');
     }

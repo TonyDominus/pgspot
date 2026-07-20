@@ -16,9 +16,12 @@ const navItems = computed(() => {
         { href: 'admin.pois.index', icon: 'location', label: 'POI' },
         { href: 'admin.contributions.index', icon: 'filter', label: 'Moderazione' },
         { href: 'admin.sponsorships.index', icon: 'star', label: 'Sponsor' },
+        { href: 'admin.events.index', icon: 'bell', label: 'Eventi' },
+        { href: 'admin.itineraries.index', icon: 'route', label: 'Itinerari' },
     ];
     if (isSuperAdmin.value) {
         items.push({ href: 'admin.users.index', icon: 'user', label: 'Utenti' });
+        items.push({ href: 'admin.system.index', icon: 'alert', label: 'Monitoraggio' });
         items.push({ href: 'admin.settings.edit', icon: 'clock', label: 'Impostazioni' });
     }
     return items;

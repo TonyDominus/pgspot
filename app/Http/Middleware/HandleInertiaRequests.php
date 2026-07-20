@@ -37,8 +37,11 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
+                    'email_verified_at' => $request->user()->email_verified_at,
                     'role' => $request->user()->role->value,
                     'is_trusted_contributor' => $request->user()->is_trusted_contributor,
+                    'notify_contributions' => $request->user()->notify_contributions,
+                    'notify_poi_updates' => $request->user()->notify_poi_updates,
                 ] : null,
             ],
             'flash' => [

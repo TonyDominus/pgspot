@@ -6,6 +6,7 @@ import AppShell from '@/Layouts/AppShell.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
+import NotificationPreferencesForm from './Partials/NotificationPreferencesForm.vue';
 import PgIcon from '@/Components/Icons/PgIcon.vue';
 
 defineProps({
@@ -53,6 +54,10 @@ const roleLabel = computed(() => ({
 
             <div class="pg-card p-5 sm:p-6">
                 <UpdateProfileInformationForm :must-verify-email="mustVerifyEmail" :status="status" />
+            </div>
+
+            <div class="pg-card p-5 sm:p-6">
+                <NotificationPreferencesForm />
             </div>
 
             <div class="pg-card p-5 sm:p-6">

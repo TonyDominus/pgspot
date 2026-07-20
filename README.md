@@ -187,6 +187,7 @@ APP_NAME="PG Spot"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://pgspot.it
+APP_LOCALE=it
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -198,6 +199,16 @@ DB_PASSWORD=password_sicura_qui
 CACHE_STORE=redis
 QUEUE_CONNECTION=redis
 SESSION_DRIVER=redis
+
+# Email (obbligatorio per verifica account e notifiche)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.tuoprovider.it
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@pgspot.it"
+MAIL_FROM_NAME="PG Spot"
 
 SUPERADMIN_EMAIL=admin@tuodominio.it
 SUPERADMIN_PASSWORD=password_molto_sicura
@@ -294,10 +305,10 @@ App su `http://localhost:8080`.
 
 ## Prossimi sviluppi
 
-- Upload foto POI (admin + obbligatoria in contribuzione)
-- [ ] CRUD eventi da admin
-- [ ] CRUD itinerari da admin
-- [ ] Notifiche email
+- Verifica email obbligatoria + consensi in registrazione
+- Notifiche email su contributi (se consenso + email verificata)
+- Admin CRUD eventi e itinerari
+- Interfaccia auth in italiano
 - [ ] SEO (sitemap, OG tags) e analytics con cookie consent
 - [ ] PWA (manifest + service worker)
 

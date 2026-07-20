@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\ItineraryController as AdminItineraryController;
 use App\Http\Controllers\Admin\ContributionController as AdminContributionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PoiController as AdminPoiController;
 use App\Http\Controllers\Admin\SponsorshipController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\FavoriteController;
@@ -21,7 +24,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/lista', [PoiController::class, 'index'])->name('poi.index');
 Route::get('/luoghi/{slug}', [PoiController::class, 'show'])->name('poi.show');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/luoghi/{slug}/recensioni', [ReviewController::class, 'store'])->name('poi.reviews.store');
     Route::delete('/luoghi/{slug}/recensioni', [ReviewController::class, 'destroy'])->name('poi.reviews.destroy');
     Route::post('/luoghi/{slug}/preferiti', [FavoriteController::class, 'store'])->name('poi.favorites.store');
@@ -53,6 +56,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::post('/contributions/{contribution}/approve', [AdminContributionController::class, 'approve'])->name('contributions.approve');
     Route::post('/contributions/{contribution}/reject', [AdminContributionController::class, 'reject'])->name('contributions.reject');
     Route::resource('sponsorships', SponsorshipController::class)->except(['show']);
+    Route::resource('events', AdminEventController::class)->except(['show']);
+    Route::resource('itineraries', AdminItineraryController::class)->except(['show']);
 });
 
 Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')->group(function () {
@@ -61,15 +66,18 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/system', [SystemController::class, 'index'])->name('system.index');
+    Route::post('/system/test-mail', [SystemController::class, 'sendTestMail'])->name('system.test-mail');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/preferiti', [HomeController::class, 'favorites'])->name('favorites');
     Route::get('/contribuisci', [ContributionController::class, 'create'])->name('contribute.create');
     Route::post('/contribuisci', [ContributionController::class, 'store'])->name('contribute.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/notifications', [ProfileController::class, 'updateNotifications'])->name('profile.notifications.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
