@@ -31,6 +31,7 @@ php artisan migrate --force
 php artisan optimize:clear
 php artisan config:cache
 php artisan view:cache
+php artisan pgspot:publish-robots
 
 echo "==> Route cache disabilitato (Inertia/Ziggy — evita pagine bianche al refresh)"
 php artisan route:clear || true

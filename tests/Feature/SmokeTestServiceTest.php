@@ -45,6 +45,7 @@ class SmokeTestServiceTest extends TestCase
         AppSetting::setValue('legal.privacy', ['body' => 'Privacy test']);
         AppSetting::setValue('site.analytics', ['ga_id' => 'G-TEST12345']);
         AppSetting::setValue('system.last_backup', ['at' => now()->toIso8601String()]);
+        AppSetting::setValue('legal.privacy', ['body' => 'Privacy policy di test per smoke test.']);
 
         $result = app(SmokeTestService::class)->run();
 
