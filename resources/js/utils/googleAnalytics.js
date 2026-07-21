@@ -4,6 +4,7 @@ export function loadGoogleAnalytics(measurementId) {
     }
 
     window.__pgspotGaLoaded = true;
+    window.__pgspotGaId = measurementId;
     window.dataLayer = window.dataLayer || [];
 
     window.gtag = function gtag() {
