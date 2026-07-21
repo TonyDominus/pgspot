@@ -4,10 +4,22 @@ import { Head, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     health: Object,
+    smokeTest: Object,
+    uptimeUrl: String,
 });
 
 function sendTestMail() {
     router.post(route('admin.system.test-mail'));
+}
+
+function runSmokeTest() {
+    router.post(route('admin.system.smoke-test'));
+}
+
+function statusClass(status) {
+    if (status === 'pass') return 'text-green-700';
+    if (status === 'warn') return 'text-amber-700';
+    return 'text-pg-error';
 }
 
 function formatDate(iso) {
@@ -25,9 +37,14 @@ function formatDate(iso) {
                 <h1 class="text-2xl font-bold text-pg-text">Monitoraggio sistema</h1>
                 <p class="text-sm text-pg-muted">Stato applicazione, email, database e backup</p>
             </div>
-            <button type="button" class="pg-btn-primary" @click="sendTestMail">
-                Invia email di test
-            </button>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" class="pg-btn-primary" @click="runSmokeTest">
+                    Esegui smoke test
+                </button>
+                <button type="button" class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50" @click="sendTestMail">
+                    Invia email di test
+                </button>
+            </div>
         </div>
 
         <div v-if="health.warnings?.length" class="mb-4 space-y-2">
@@ -226,6 +243,51 @@ function formatDate(iso) {
                         <dd class="font-medium">{{ health.stats.contributions_pending }}</dd>
                     </div>
                 </dl>
+            </section>
+
+            <section class="pg-card space-y-3 p-6 lg:col-span-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="font-semibold text-pg-text">Smoke test go-live</h2>
+                    <span v-if="smokeTest?.at" class="text-xs text-pg-muted">
+                        Ultimo: {{ formatDate(smokeTest.at) }}
+                    </span>
+                </div>
+                <p v-if="smokeTest" class="text-sm">
+                    <span :class="smokeTest.ok ? 'text-green-700' : 'text-pg-error'">
+                        {{ smokeTest.ok ? 'Pronto per produzione' : 'Ci sono errori da risolvere' }}
+                    </span>
+                    — {{ smokeTest.passed }} ok, {{ smokeTest.warnings }} avvisi, {{ smokeTest.failed }} errori
+                </p>
+                <ul v-if="smokeTest?.checks?.length" class="space-y-1 text-sm">
+                    <li v-for="check in smokeTest.checks" :key="check.key" class="flex gap-2">
+                        <span class="font-medium" :class="statusClass(check.status)">
+                            {{ check.status === 'pass' ? '✓' : check.status === 'warn' ? '!' : '✗' }}
+                        </span>
+                        <span>{{ check.label }} — {{ check.message }}</span>
+                    </li>
+                </ul>
+                <p v-else class="text-sm text-pg-muted">Clic «Esegui smoke test» per verificare il sito.</p>
+                <p class="text-xs text-pg-muted">Da CLI: <code class="rounded bg-pg-background px-1">php artisan pgspot:smoke-test</code></p>
+            </section>
+
+            <section class="pg-card space-y-3 p-6 lg:col-span-2">
+                <h2 class="font-semibold text-pg-text">UptimeRobot (monitoraggio esterno)</h2>
+                <p class="text-sm text-pg-muted">
+                    Servizio gratuito che controlla il sito ogni 5 minuti e ti avvisa via email se va offline.
+                </p>
+                <dl class="space-y-2 text-sm">
+                    <div>
+                        <dt class="text-pg-muted">URL da monitorare</dt>
+                        <dd class="mt-1 break-all font-mono text-pg-text">{{ uptimeUrl }}</dd>
+                    </div>
+                </dl>
+                <ol class="list-decimal space-y-1 pl-5 text-xs text-pg-muted">
+                    <li>Vai su <a href="https://uptimerobot.com" target="_blank" rel="noopener" class="text-pg-primary underline">uptimerobot.com</a> (account gratis)</li>
+                    <li>Add New Monitor → tipo <strong>HTTP(s)</strong></li>
+                    <li>URL: copia quello sopra (<code>/up</code>)</li>
+                    <li>Intervallo: 5 minuti</li>
+                    <li>Alert Contacts: la tua email</li>
+                </ol>
             </section>
 
             <section v-if="health.last_mail_error" class="pg-card space-y-3 border-pg-error/30 bg-red-50/50 p-6 lg:col-span-2">

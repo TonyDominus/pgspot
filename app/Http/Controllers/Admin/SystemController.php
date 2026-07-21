@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Notifications\TestMailNotification;
 use App\Support\SafeMail;
+use App\Services\SmokeTestService;
 use App\Services\SystemHealthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,12 +15,17 @@ use Inertia\Response;
 
 class SystemController extends Controller
 {
-    public function __construct(private SystemHealthService $health) {}
+    public function __construct(
+        private SystemHealthService $health,
+        private SmokeTestService $smoke,
+    ) {}
 
     public function index(): Response
     {
         return Inertia::render('Admin/System/Index', [
             'health' => $this->health->snapshot(),
+            'smokeTest' => SmokeTestService::lastResult(),
+            'uptimeUrl' => url('/up'),
         ]);
     }
 
@@ -37,5 +43,16 @@ class SystemController extends Controller
         ]);
 
         return back()->with('success', 'Email di test inviata a '.$request->user()->email);
+    }
+
+    public function runSmokeTest(): RedirectResponse
+    {
+        $result = $this->smoke->run();
+
+        $message = $result['ok']
+            ? "Smoke test ok ({$result['passed']} pass, {$result['warnings']} avvisi)."
+            : "Smoke test fallito: {$result['failed']} errori, {$result['warnings']} avvisi.";
+
+        return back()->with($result['ok'] ? 'success' : 'error', $message);
     }
 }

@@ -66,7 +66,7 @@ class SystemHealthService
             'last_test_mail' => AppSetting::getValue('system.last_test_mail'),
             'tests' => [
                 'last_run' => AppSetting::getValue('system.last_tests_run'),
-                'expected_total' => 36,
+                'expected_total' => 37,
             ],
             'warnings' => $this->warnings(),
         ];

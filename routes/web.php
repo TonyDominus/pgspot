@@ -79,6 +79,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('/system', [SystemController::class, 'index'])->name('system.index');
     Route::post('/system/test-mail', [SystemController::class, 'sendTestMail'])->name('system.test-mail');
+    Route::post('/system/smoke-test', [SystemController::class, 'runSmokeTest'])->name('system.smoke-test');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

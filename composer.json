@@ -52,7 +52,7 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test",
-            "@php artisan pgspot:record-tests --passed=36 --total=36"
+            "@php artisan pgspot:record-tests --passed=37 --total=37"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
