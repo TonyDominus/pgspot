@@ -47,7 +47,7 @@ class MvpPrepareTest extends TestCase
         );
 
         Http::fake([
-            'overpass-api.de/*' => Http::response([
+            '*' => Http::response([
                 'elements' => [
                     [
                         'type' => 'node',

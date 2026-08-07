@@ -155,17 +155,55 @@ class OsmImportService
 out center tags;
 QL;
 
-        $response = Http::timeout(100)
-            ->withOptions(['verify' => (bool) config('services.overpass.verify', true)])
-            ->asForm()
-            ->post((string) config('services.overpass.url'), ['data' => $query]);
+        $endpoints = $this->endpoints();
+        $errors = [];
 
-        $response->throw();
+        foreach ($endpoints as $url) {
+            try {
+                $response = Http::timeout(100)
+                    ->withHeaders([
+                        'User-Agent' => (string) config('services.overpass.user_agent'),
+                        'Accept' => 'application/json',
+                    ])
+                    ->withOptions(['verify' => (bool) config('services.overpass.verify', true)])
+                    ->asForm()
+                    ->post($url, ['data' => $query]);
 
-        /** @var list<array<string, mixed>> $elements */
-        $elements = $response->json('elements') ?? [];
+                if ($response->status() === 406 || $response->serverError() || $response->status() === 429) {
+                    $errors[] = "{$url} → HTTP {$response->status()}";
 
-        return $elements;
+                    continue;
+                }
+
+                $response->throw();
+
+                /** @var list<array<string, mixed>> $elements */
+                $elements = $response->json('elements') ?? [];
+
+                return $elements;
+            } catch (\Throwable $e) {
+                $errors[] = "{$url} → ".$e->getMessage();
+            }
+        }
+
+        throw new \RuntimeException(
+            'Overpass non raggiungibile (406 spesso = User-Agent/mirror). Tentativi: '.implode(' | ', $errors)
+        );
+    }
+
+    /** @return list<string> */
+    private function endpoints(): array
+    {
+        $primary = (string) config('services.overpass.url');
+        $mirrors = config('services.overpass.mirrors', []);
+        if (! is_array($mirrors)) {
+            $mirrors = [];
+        }
+
+        return array_values(array_unique(array_filter([
+            $primary,
+            ...$mirrors,
+        ])));
     }
 
     /** @param  array<string, mixed>  $element */

@@ -20,7 +20,7 @@ class MvpPrepareService
      *   legal: array{filled: list<string>, skipped: list<string>},
      *   cleanup: array{archived: list<string>, renamed: list<string>},
      *   events: array{refreshed: bool, title: ?string},
-     *   osm: ?array{created: int, updated: int, skipped: int, total: int}
+     *   osm: ?array{created: int, updated: int, skipped: int, total: int, error?: string}
      * }
      */
     public function run(bool $dryRun = false, bool $skipImport = false, int $osmLimit = 250): array
@@ -150,7 +150,7 @@ class MvpPrepareService
         ];
     }
 
-    /** @return array{created: int, updated: int, skipped: int, total: int} */
+    /** @return array{created: int, updated: int, skipped: int, total: int, error?: string} */
     public function importOsm(bool $dryRun = false, int $limit = 250): array
     {
         $center = AppSetting::getValue('app.default_center', [
@@ -166,17 +166,27 @@ class MvpPrepareService
 
         $actor = User::query()->whereIn('role', [UserRole::SuperAdmin, UserRole::Admin])->first();
 
-        $result = $this->osm->import(
-            [
-                'south' => $lat - $delta,
-                'west' => $lng - $delta,
-                'north' => $lat + $delta,
-                'east' => $lng + $delta,
-            ],
-            $dryRun,
-            $limit,
-            $actor,
-        );
+        try {
+            $result = $this->osm->import(
+                [
+                    'south' => $lat - $delta,
+                    'west' => $lng - $delta,
+                    'north' => $lat + $delta,
+                    'east' => $lng + $delta,
+                ],
+                $dryRun,
+                $limit,
+                $actor,
+            );
+        } catch (\Throwable $e) {
+            return [
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'total' => 0,
+                'error' => $e->getMessage(),
+            ];
+        }
 
         return [
             'created' => $result['created'],

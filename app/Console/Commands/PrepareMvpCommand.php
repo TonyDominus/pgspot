@@ -54,6 +54,9 @@ class PrepareMvpCommand extends Command
         $this->line('<fg=cyan>OpenStreetMap</>');
         if ($result['osm'] === null) {
             $this->line('  Saltato (--skip-import)');
+        } elseif (! empty($result['osm']['error'])) {
+            $this->error('  Import fallito: '.$result['osm']['error']);
+            $this->comment('  Legal/cleanup/eventi sono comunque applicati. Riprova: php artisan pgspot:import-osm');
         } else {
             $osm = $result['osm'];
             $this->line("  Creati: {$osm['created']} | Aggiornati: {$osm['updated']} | Skip: {$osm['skipped']} | Totale processati: {$osm['total']}");
@@ -62,10 +65,15 @@ class PrepareMvpCommand extends Command
         }
 
         $this->newLine();
-        $this->info($dryRun
-            ? 'Dry-run completato. Riesegui senza --dry-run sulla VPS dopo il deploy.'
-            : 'MVP preparato. Manca solo caricare le foto sui POI (admin → Luoghi).');
+        $osmFailed = is_array($result['osm'] ?? null) && ! empty($result['osm']['error']);
+        if ($dryRun) {
+            $this->info('Dry-run completato. Riesegui senza --dry-run sulla VPS dopo il deploy.');
+        } elseif ($osmFailed) {
+            $this->warn('MVP parziale: legal/cleanup ok, OSM da ritentare. Poi carica le foto.');
+        } else {
+            $this->info('MVP preparato. Manca solo caricare le foto sui POI (admin → Luoghi).');
+        }
 
-        return self::SUCCESS;
+        return $osmFailed ? self::FAILURE : self::SUCCESS;
     }
 }
