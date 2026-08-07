@@ -222,8 +222,8 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Scopri panorami, servizi ed eventi di Perugia. Registrati per contribuire alla mappa!',
                 'starts_at' => now(),
                 'ends_at' => now()->addMonths(6),
-                'is_featured' => true,
-                'status' => EventStatus::Published,
+                'is_featured' => false,
+                'status' => EventStatus::Draft,
                 'created_by' => $superAdmin->id,
             ],
         );

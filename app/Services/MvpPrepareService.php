@@ -105,47 +105,26 @@ class MvpPrepareService
         return compact('archived', 'renamed');
     }
 
-    /** @return array{refreshed: bool, title: ?string} */
+    /** Archivia l'evento placeholder "Benvenuto" così non occupa la home. */
     public function ensureWelcomeEvent(bool $dryRun = false): array
     {
         $event = Event::query()->where('slug', 'benvenuto-pgspot')->first();
 
         if (! $event) {
-            if ($dryRun) {
-                return ['refreshed' => true, 'title' => 'Benvenuto su PG Spot'];
-            }
-
-            $actor = User::query()->where('role', UserRole::SuperAdmin)->first();
-            Event::query()->create([
-                'title' => 'Benvenuto su PG Spot',
-                'slug' => 'benvenuto-pgspot',
-                'description' => 'Scopri panorami, servizi e itinerari di Perugia. Registrati per contribuire alla mappa!',
-                'starts_at' => now(),
-                'ends_at' => now()->addMonths(6),
-                'is_featured' => true,
-                'status' => EventStatus::Published,
-                'created_by' => $actor?->id,
-            ]);
-
-            return ['refreshed' => true, 'title' => 'Benvenuto su PG Spot'];
+            return ['refreshed' => false, 'title' => null];
         }
 
-        $needsRefresh = $event->status !== EventStatus::Published
-            || ($event->ends_at && $event->ends_at->lt(now()))
-            || $event->starts_at->lt(now()->subMonths(2));
+        $needsHide = $event->status === EventStatus::Published || $event->is_featured;
 
-        if ($needsRefresh && ! $dryRun) {
+        if ($needsHide && ! $dryRun) {
             $event->update([
-                'status' => EventStatus::Published,
-                'is_featured' => true,
-                'starts_at' => now(),
-                'ends_at' => now()->addMonths(6),
-                'description' => $event->description ?: 'Scopri panorami, servizi e itinerari di Perugia.',
+                'status' => EventStatus::Draft,
+                'is_featured' => false,
             ]);
         }
 
         return [
-            'refreshed' => $needsRefresh,
+            'refreshed' => $needsHide,
             'title' => $event->title,
         ];
     }

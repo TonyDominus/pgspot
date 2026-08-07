@@ -46,9 +46,13 @@ class PrepareMvpCommand extends Command
 
         $this->newLine();
         $this->line('<fg=cyan>Eventi</>');
-        $this->line($result['events']['refreshed']
-            ? '  Evento welcome aggiornato/creato: '.($result['events']['title'] ?? '')
-            : '  Evento welcome già valido: '.($result['events']['title'] ?? '—'));
+        if ($result['events']['title'] && $result['events']['refreshed']) {
+            $this->line('  Nascosto evento placeholder: '.$result['events']['title']);
+        } elseif ($result['events']['title']) {
+            $this->line('  Placeholder già nascosto: '.$result['events']['title']);
+        } else {
+            $this->line('  Nessun evento placeholder');
+        }
 
         $this->newLine();
         $this->line('<fg=cyan>OpenStreetMap</>');
