@@ -305,11 +305,13 @@ App su `http://localhost:8080`.
 
 ## Prossimi sviluppi
 
-- Verifica email obbligatoria + consensi in registrazione
-- Notifiche email su contributi (se consenso + email verificata)
-- Admin CRUD eventi e itinerari
-- Interfaccia auth in italiano
-- [ ] SEO (sitemap, OG tags) e analytics con cookie consent
+- [x] Verifica email obbligatoria + consensi in registrazione
+- [x] Notifiche email su contributi (se consenso + email verificata)
+- [x] Admin CRUD eventi e itinerari
+- [x] Interfaccia auth in italiano
+- [x] SEO (sitemap, OG tags) e analytics con cookie consent
+- [x] Prepare MVP: legal default, cleanup, import OSM (`php artisan pgspot:prepare-mvp`)
+- [ ] Caricare foto sui POI (unico gap MVP dopo prepare)
 - [ ] PWA (manifest + service worker)
 
 ## Licenza

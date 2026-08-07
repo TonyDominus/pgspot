@@ -22,6 +22,12 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'overpass' => [
+        'url' => env('OVERPASS_URL', 'https://overpass-api.de/api/interpreter'),
+        // Su WAMP locale a volte manca il CA bundle: OVERPASS_VERIFY_SSL=false solo in local
+        'verify' => filter_var(env('OVERPASS_VERIFY_SSL', true), FILTER_VALIDATE_BOOL),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

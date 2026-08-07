@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Support\LegalDefaults;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,9 +21,7 @@ class PageController extends Controller
         abort_unless(isset($pages[$page]), 404);
 
         $meta = $pages[$page];
-
-        $raw = AppSetting::getValue($meta['key'], ['body' => $this->defaultContent($page)]);
-        $content = is_array($raw) ? ($raw['body'] ?? '') : (string) $raw;
+        $content = $this->resolveContent($meta['key'], $page);
 
         return Inertia::render('Legal/Show', [
             'title' => $meta['title'],
@@ -30,14 +29,15 @@ class PageController extends Controller
         ]);
     }
 
-    private function defaultContent(string $page): string
+    private function resolveContent(string $settingKey, string $page): string
     {
-        return match ($page) {
-            'privacy' => 'Informativa privacy di PG Spot. Aggiorna questo testo dal pannello superadmin.',
-            'termini' => 'Termini di utilizzo della piattaforma PG Spot.',
-            'cookie' => 'Questo sito utilizza cookie tecnici necessari al funzionamento.',
-            'contatti' => 'Per informazioni: info@pgspot.it',
-            default => '',
-        };
+        $raw = AppSetting::getValue($settingKey);
+        $body = is_array($raw) ? trim((string) ($raw['body'] ?? '')) : trim((string) ($raw ?? ''));
+
+        if ($body !== '') {
+            return $body;
+        }
+
+        return LegalDefaults::body($page);
     }
 }

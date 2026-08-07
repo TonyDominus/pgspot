@@ -23,9 +23,8 @@ class HomeController extends Controller
     {
         $featuredEvents = SiteFeatures::eventsPublicEnabled()
             ? Event::query()
-                ->published()
+                ->listed()
                 ->featured()
-                ->where('starts_at', '>=', now()->subDay())
                 ->orderBy('starts_at')
                 ->limit(3)
                 ->get(['id', 'title', 'slug', 'description', 'starts_at', 'image'])

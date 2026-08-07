@@ -111,3 +111,29 @@ Oggi non è obbligatorio per il go-live.
 - [ ] Password admin cambiate
 - [ ] Testi legali compilati
 - [ ] Search Console: sitemap inviata
+
+---
+
+## Chiusura MVP (resta solo caricare le foto)
+
+Dopo il deploy del codice:
+
+```bash
+cd /var/www/pgspot
+# Aggiorna nginx (obbligatorio per geolocalizzazione)
+sudo cp deploy/nginx/pgspot.conf /etc/nginx/sites-available/pgspot
+sudo nginx -t && sudo systemctl reload nginx
+# Verifica header: Permissions-Policy deve contenere geolocation=(self) e NON geolocation=()
+
+php artisan pgspot:prepare-mvp
+# oppure dry-run: php artisan pgspot:prepare-mvp --dry-run
+# solo legal/cleanup senza OSM: php artisan pgspot:prepare-mvp --skip-import
+```
+
+Cosa fa `pgspot:prepare-mvp`:
+1. Compila privacy/termini/cookie/contatti se vuoti
+2. Archivia POI di test (es. «Casa mia») e corregge slug typo
+3. Aggiorna/crea evento welcome listabile
+4. Importa bagni/fontanelle/parcheggi da OpenStreetMap (Overpass, ODbL)
+
+Poi in **Admin → Luoghi** carica le foto (i POI OSM hanno `needs_photo` negli attributes).

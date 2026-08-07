@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Support\LegalDefaults;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,10 +22,10 @@ class SettingsController extends Controller
                 'instagram' => AppSetting::getValue('site.social', [])['instagram'] ?? '',
                 'facebook' => AppSetting::getValue('site.social', [])['facebook'] ?? '',
                 'contact_email' => AppSetting::getValue('site.contact', [])['email'] ?? 'info@pgspot.it',
-                'legal_privacy' => $this->legalBody('legal.privacy'),
-                'legal_terms' => $this->legalBody('legal.terms'),
-                'legal_cookies' => $this->legalBody('legal.cookies'),
-                'legal_contact' => $this->legalBody('legal.contact'),
+                'legal_privacy' => $this->legalBodyOrDefault('legal.privacy', 'privacy'),
+                'legal_terms' => $this->legalBodyOrDefault('legal.terms', 'termini'),
+                'legal_cookies' => $this->legalBodyOrDefault('legal.cookies', 'cookie'),
+                'legal_contact' => $this->legalBodyOrDefault('legal.contact', 'contatti'),
                 'events_public' => (bool) AppSetting::getValue('features.events_public', true),
                 'ga_measurement_id' => AppSetting::getValue('site.analytics', [])['ga_id'] ?? '',
             ],
@@ -63,10 +64,18 @@ class SettingsController extends Controller
         ]);
         AppSetting::setValue('site.contact', ['email' => $validated['contact_email']]);
 
-        AppSetting::setValue('legal.privacy', ['body' => $validated['legal_privacy'] ?? '']);
-        AppSetting::setValue('legal.terms', ['body' => $validated['legal_terms'] ?? '']);
-        AppSetting::setValue('legal.cookies', ['body' => $validated['legal_cookies'] ?? '']);
-        AppSetting::setValue('legal.contact', ['body' => $validated['legal_contact'] ?? '']);
+        AppSetting::setValue('legal.privacy', [
+            'body' => $this->legalPayload($validated['legal_privacy'] ?? '', 'privacy'),
+        ]);
+        AppSetting::setValue('legal.terms', [
+            'body' => $this->legalPayload($validated['legal_terms'] ?? '', 'termini'),
+        ]);
+        AppSetting::setValue('legal.cookies', [
+            'body' => $this->legalPayload($validated['legal_cookies'] ?? '', 'cookie'),
+        ]);
+        AppSetting::setValue('legal.contact', [
+            'body' => $this->legalPayload($validated['legal_contact'] ?? '', 'contatti'),
+        ]);
         AppSetting::setValue('features.events_public', $request->boolean('events_public'));
         AppSetting::setValue('site.analytics', [
             'ga_id' => $validated['ga_measurement_id'] ?? '',
@@ -75,10 +84,24 @@ class SettingsController extends Controller
         return back()->with('success', 'Impostazioni salvate.');
     }
 
+    private function legalBodyOrDefault(string $key, string $page): string
+    {
+        $body = $this->legalBody($key);
+
+        return $body !== '' ? $body : LegalDefaults::body($page);
+    }
+
+    private function legalPayload(string $body, string $page): string
+    {
+        $trimmed = trim($body);
+
+        return $trimmed !== '' ? $trimmed : LegalDefaults::body($page);
+    }
+
     private function legalBody(string $key): string
     {
         $raw = AppSetting::getValue($key);
 
-        return is_array($raw) ? ($raw['body'] ?? '') : (string) ($raw ?? '');
+        return is_array($raw) ? trim((string) ($raw['body'] ?? '')) : trim((string) ($raw ?? ''));
     }
 }

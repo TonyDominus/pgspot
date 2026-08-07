@@ -62,6 +62,19 @@ class DatabaseSeeder extends Seeder
         ]);
         AppSetting::setValue('site.contact', ['email' => 'info@pgspot.it']);
 
+        foreach ([
+            'legal.privacy' => \App\Support\LegalDefaults::body('privacy'),
+            'legal.terms' => \App\Support\LegalDefaults::body('termini'),
+            'legal.cookies' => \App\Support\LegalDefaults::body('cookie'),
+            'legal.contact' => \App\Support\LegalDefaults::body('contatti'),
+        ] as $key => $body) {
+            $existing = AppSetting::getValue($key);
+            $current = is_array($existing) ? trim((string) ($existing['body'] ?? '')) : '';
+            if ($current === '') {
+                AppSetting::setValue($key, ['body' => $body]);
+            }
+        }
+
         $categories = [
             ['slug' => 'panorami', 'name' => 'Panorami', 'icon' => 'panorama', 'color' => '#2E7D32', 'sort_order' => 1],
             ['slug' => 'bagni', 'name' => 'Bagni', 'icon' => 'restroom', 'color' => '#00ACC1', 'sort_order' => 2],
@@ -208,7 +221,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Benvenuto su PG Spot',
                 'description' => 'Scopri panorami, servizi ed eventi di Perugia. Registrati per contribuire alla mappa!',
                 'starts_at' => now(),
-                'ends_at' => now()->addMonths(3),
+                'ends_at' => now()->addMonths(6),
                 'is_featured' => true,
                 'status' => EventStatus::Published,
                 'created_by' => $superAdmin->id,

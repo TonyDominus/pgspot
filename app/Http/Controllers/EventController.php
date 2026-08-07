@@ -14,8 +14,7 @@ class EventController extends Controller
         abort_unless(SiteFeatures::eventsPublicEnabled(), 404);
 
         $events = Event::query()
-            ->published()
-            ->where('starts_at', '>=', now()->subMonths(1))
+            ->listed()
             ->orderBy('starts_at')
             ->get(['id', 'title', 'slug', 'description', 'starts_at', 'ends_at', 'image', 'external_url']);
 

@@ -11,7 +11,7 @@ const page = usePage();
 const isLoggedIn = computed(() => !!page.props.auth?.user);
 const user = computed(() => page.props.auth?.user);
 const isAdmin = computed(() => ['admin', 'superadmin'].includes(user.value?.role));
-const eventsPublic = computed(() => page.props.features?.events_public ?? false);
+const eventsNav = computed(() => page.props.features?.events_nav ?? false);
 
 const items = computed(() => {
     const nav = [
@@ -20,7 +20,7 @@ const items = computed(() => {
         { id: 'contribute', href: 'contribute.create', icon: 'plus', label: 'Aggiungi', auth: true, fab: true },
         { id: 'routes', href: 'routes', icon: 'route', label: 'Itinerari' },
     ];
-    if (eventsPublic.value) {
+    if (eventsNav.value) {
         nav.splice(3, 0, { id: 'events', href: 'events.index', icon: 'bell', label: 'Eventi' });
     }
     nav.push({ id: 'profile', href: 'profile.edit', icon: 'user', label: 'Profilo', auth: true });

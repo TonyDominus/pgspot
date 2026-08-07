@@ -12,7 +12,7 @@ const emit = defineEmits(['close']);
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const isAdmin = computed(() => ['admin', 'superadmin'].includes(user.value?.role));
-const eventsPublic = computed(() => page.props.features?.events_public ?? false);
+const eventsNav = computed(() => page.props.features?.events_nav ?? false);
 
 const links = computed(() => {
     const items = [
@@ -22,7 +22,7 @@ const links = computed(() => {
         { href: 'favorites', label: 'Preferiti', icon: 'heart', auth: true },
         { href: 'routes', label: 'Itinerari', icon: 'route' },
     ];
-    if (eventsPublic.value) {
+    if (eventsNav.value) {
         items.push({ href: 'events.index', label: 'Eventi', icon: 'bell' });
     }
     items.push(

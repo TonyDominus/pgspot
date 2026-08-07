@@ -51,6 +51,21 @@ class Event extends Model
         return $query->where('status', EventStatus::Published);
     }
 
+    /**
+     * Eventi ancora rilevanti in lista pubblica (in corso, recenti senza fine, o futuri).
+     */
+    public function scopeListed($query)
+    {
+        return $query->published()->where(function ($q) {
+            $q->where('ends_at', '>=', now())
+                ->orWhere(function ($q2) {
+                    $q2->whereNull('ends_at')
+                        ->where('starts_at', '>=', now()->subMonths(1));
+                })
+                ->orWhere('starts_at', '>=', now());
+        });
+    }
+
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);

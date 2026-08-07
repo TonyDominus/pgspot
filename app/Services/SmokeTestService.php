@@ -36,7 +36,7 @@ class SmokeTestService
                 'legal_privacy',
                 'Privacy policy compilata',
                 filled($this->legalBody('legal.privacy')),
-                'Testo privacy vuoto in Admin → Impostazioni',
+                'Testo privacy vuoto in Admin → Impostazioni (esegui php artisan pgspot:prepare-mvp)',
                 'warn',
             ),
             $this->checkCondition(
