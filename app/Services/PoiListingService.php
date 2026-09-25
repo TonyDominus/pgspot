@@ -17,7 +17,7 @@ class PoiListingService
 
         $poisQuery = Poi::query()
             ->published()
-            ->with(['categories:id,slug,name,color,icon', 'photos']);
+            ->with(['categories:id,slug,name,color,icon', 'primaryCategory:id,slug,name,color,icon', 'photos']);
 
         if ($categorySlug) {
             $poisQuery->whereHas('categories', fn ($q) => $q->where('slug', $categorySlug));
@@ -39,7 +39,7 @@ class PoiListingService
         $pois = $poisQuery
             ->orderByDesc('rating')
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'address', 'rating', 'attributes'])
+            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'address', 'rating', 'primary_category_id', 'attributes'])
             ->each->append('primary_photo_url');
 
         return [

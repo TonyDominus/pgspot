@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\PoiStatus;
 use App\Models\AppSetting;
 use App\Models\Category;
+use App\Models\Municipality;
 use App\Models\Poi;
 use App\Services\MvpPrepareService;
 use App\Services\OsmImportService;
@@ -57,24 +58,32 @@ class MvpPrepareTest extends TestCase
                         'tags' => [
                             'amenity' => 'toilets',
                             'name' => 'WC Test OSM',
+                            'addr:street' => 'Via Baglioni',
                         ],
                     ],
                 ],
             ], 200),
         ]);
 
+        $municipality = Municipality::query()
+            ->where('slug', 'perugia')
+            ->whereHas('province', fn ($q) => $q->where('code', 'PG'))
+            ->firstOrFail();
+
         $result = app(OsmImportService::class)->import([
             'south' => 43.05,
             'west' => 12.30,
             'north' => 43.16,
             'east' => 12.45,
-        ]);
+        ], $municipality);
 
         $this->assertSame(1, $result['created']);
         $this->assertDatabaseHas('pois', ['name' => 'WC Test OSM']);
         $poi = Poi::query()->where('name', 'WC Test OSM')->first();
         $this->assertSame('node/12345', $poi->attributes['osm_id'] ?? null);
         $this->assertTrue($poi->attributes['needs_photo'] ?? false);
+        $this->assertSame($municipality->id, $poi->municipality_id);
+        $this->assertSame('Via Baglioni', $poi->address);
     }
 
     public function test_ongoing_event_started_weeks_ago_is_listed(): void

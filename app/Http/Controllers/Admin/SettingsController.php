@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Models\Region;
 use App\Support\LegalDefaults;
+use App\Support\TerritoryChain;
+use App\Support\TerritoryDefaults;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,6 +33,8 @@ class SettingsController extends Controller
                 'events_public' => (bool) AppSetting::getValue('features.events_public', true),
                 'ga_measurement_id' => AppSetting::getValue('site.analytics', [])['ga_id'] ?? '',
             ],
+            'regions' => Region::query()->orderBy('name')->get(['id', 'name']),
+            'territory' => TerritoryDefaults::get(),
         ]);
     }
 
@@ -49,7 +55,26 @@ class SettingsController extends Controller
             'legal_contact' => 'nullable|string|max:50000',
             'events_public' => 'boolean',
             'ga_measurement_id' => 'nullable|string|max:32|regex:/^(G-[A-Z0-9]+)?$/',
+            'default_region_id' => 'required|integer|exists:regions,id',
+            'default_province_id' => 'required|integer|exists:provinces,id',
+            'default_municipality_id' => 'required|integer|exists:municipalities,id',
+        ], [
+            'default_municipality_id.required' => 'Seleziona il comune predefinito.',
         ]);
+
+        $chainError = TerritoryChain::message(
+            (int) $validated['default_region_id'],
+            (int) $validated['default_province_id'],
+            (int) $validated['default_municipality_id'],
+        );
+        if ($chainError) {
+            $mapped = [];
+            foreach ($chainError as $field => $message) {
+                $mapped['default_'.$field] = $message;
+            }
+
+            throw ValidationException::withMessages($mapped);
+        }
 
         AppSetting::setValue('app.tagline', $validated['tagline']);
         AppSetting::setValue('app.default_center', [
@@ -80,6 +105,11 @@ class SettingsController extends Controller
         AppSetting::setValue('site.analytics', [
             'ga_id' => $validated['ga_measurement_id'] ?? '',
         ]);
+        TerritoryDefaults::put(
+            (int) $validated['default_region_id'],
+            (int) $validated['default_province_id'],
+            (int) $validated['default_municipality_id'],
+        );
 
         return back()->with('success', 'Impostazioni salvate.');
     }

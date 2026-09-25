@@ -3,16 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Models\Event;
 use App\Models\Poi;
-use App\Support\Seo;
+use App\Services\ItineraryService;
 use App\Services\PoiListingService;
+use App\Services\PoiRelatedService;
+use App\Support\PoiSheet;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PoiController extends Controller
 {
-    public function __construct(private PoiListingService $listing) {}
+    public function __construct(
+        private PoiListingService $listing,
+        private PoiRelatedService $related,
+        private ItineraryService $itineraryService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -27,18 +35,37 @@ class PoiController extends Controller
         $poi = Poi::query()
             ->published()
             ->where('slug', $slug)
-            ->with(['categories:id,slug,name,color,icon', 'photos', 'tags:id,slug,name'])
+            ->with([
+                'categories:id,slug,name,color,icon,is_active',
+                'primaryCategory:id,slug,name,color,icon,is_active',
+                'photos',
+                'tags' => fn ($tags) => $tags->where('is_active', true)->select('tags.id', 'tags.slug', 'tags.name'),
+                'municipality.province.region',
+            ])
             ->firstOrFail()
             ->append('primary_photo_url');
 
-        $related = Poi::query()
+        $secondary = $poi->categories
+            ->where('is_active', true)
+            ->where('slug', '!=', 'instagram-spot')
+            ->where('id', '!=', $poi->primary_category_id)
+            ->values();
+
+        $itineraries = $poi->itineraries()
+            ->public()
+            ->get(['itineraries.id', 'itineraries.title', 'itineraries.slug', 'itineraries.duration', 'itineraries.estimated_duration_minutes'])
+            ->map(fn ($itinerary) => [
+                'id' => $itinerary->id,
+                'title' => $itinerary->title,
+                'slug' => $itinerary->slug,
+                'duration' => $this->itineraryService->durationLabel($itinerary),
+            ]);
+
+        $events = Event::query()
             ->published()
-            ->where('id', '!=', $poi->id)
-            ->whereHas('categories', fn ($q) => $q->whereIn('id', $poi->categories->pluck('id')))
-            ->with(['categories:id,slug,name,color,icon', 'photos'])
-            ->limit(4)
-            ->get(['id', 'name', 'slug', 'description', 'latitude', 'longitude', 'rating'])
-            ->each->append('primary_photo_url');
+            ->where('poi_id', $poi->id)
+            ->orderBy('starts_at')
+            ->get(['id', 'title', 'slug', 'starts_at']);
 
         $reviews = $poi->reviews()
             ->with('user:id,name')
@@ -49,12 +76,20 @@ class PoiController extends Controller
             ? $poi->reviews()->where('user_id', $request->user()->id)->first()
             : null;
 
+        $poi->makeHidden(['attributes']);
+
         return Inertia::render('Poi/Show', [
             'poi' => $poi,
-            'related' => $related,
+            'primaryCategory' => $poi->primaryCategory?->slug === 'instagram-spot' ? null : $poi->primaryCategory,
+            'secondaryCategories' => $secondary,
+            'placeLine' => PoiSheet::placeLine($poi),
+            'facts' => PoiSheet::facts($poi),
+            'verifiedLabel' => PoiSheet::verifiedLabel($poi),
+            'related' => $this->related->for($poi),
+            'itineraries' => $itineraries,
+            'events' => $events,
             'reviews' => $reviews,
             'userReview' => $userReview,
-            'mapCenter' => AppSetting::getValue('app.default_center'),
             'seo' => Seo::forPoi($poi),
         ]);
     }

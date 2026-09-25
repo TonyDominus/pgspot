@@ -13,7 +13,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-const category = computed(() => props.poi?.categories?.[0]);
+const category = computed(() => props.poi?.primary_category ?? props.poi?.categories?.[0]);
 const navigateUrl = computed(() =>
   props.poi
     ? `https://www.google.com/maps/dir/?api=1&destination=${props.poi.latitude},${props.poi.longitude}`
@@ -53,8 +53,8 @@ const navigateUrl = computed(() =>
                         {{ category.name }}
                     </span>
                     <h3 class="mt-1 truncate font-semibold text-pg-text">{{ poi.name }}</h3>
-                    <StarRating v-if="poi.rating" :rating="poi.rating" class="mt-1" />
-                    <p v-if="poi.address" class="mt-1 truncate text-xs text-pg-muted">{{ poi.address }}</p>
+                    <p v-if="poi.municipality" class="truncate text-xs text-pg-muted">{{ poi.municipality }}</p>
+                    <StarRating :rating="poi.rating" class="mt-1" />
                 </div>
             </div>
 
@@ -67,7 +67,7 @@ const navigateUrl = computed(() =>
                     :href="route('poi.show', poi.slug)"
                     class="pg-btn-primary flex-1 text-center text-sm"
                 >
-                    Dettagli
+                    Apri luogo
                 </Link>
                 <FavoriteButton :poi-id="poi.id" :poi-slug="poi.slug" />
                 <a

@@ -10,7 +10,7 @@ defineProps({
     floating: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:search', 'open-menu']);
+const emit = defineEmits(['update:search', 'open-menu', 'focus-search', 'search-key']);
 </script>
 
 <template>
@@ -40,10 +40,15 @@ const emit = defineEmits(['update:search', 'open-menu']);
                 <input
                     :value="search"
                     type="search"
-                    placeholder="Cerca un luogo..."
+                    placeholder="Cerca un luogo, un comune..."
+                    aria-label="Cerca luoghi, comuni o categorie"
+                    aria-autocomplete="list"
                     class="w-full rounded-full border-0 bg-pg-surface/95 py-2.5 pl-10 pr-4 text-sm shadow-card backdrop-blur-sm focus:ring-2 focus:ring-pg-primary"
                     @input="emit('update:search', $event.target.value)"
+                    @focus="emit('focus-search')"
+                    @keydown="emit('search-key', $event)"
                 />
+                <slot name="suggestions" />
             </div>
             <button
                 type="button"

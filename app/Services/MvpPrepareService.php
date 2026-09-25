@@ -7,9 +7,12 @@ use App\Enums\PoiStatus;
 use App\Enums\UserRole;
 use App\Models\AppSetting;
 use App\Models\Event;
+use App\Models\Municipality;
 use App\Models\Poi;
 use App\Models\User;
 use App\Support\LegalDefaults;
+use App\Support\MunicipalityResolver;
+use App\Support\TerritoryDefaults;
 
 class MvpPrepareService
 {
@@ -23,13 +26,13 @@ class MvpPrepareService
      *   osm: ?array{created: int, updated: int, skipped: int, total: int, error?: string}
      * }
      */
-    public function run(bool $dryRun = false, bool $skipImport = false, int $osmLimit = 250): array
+    public function run(bool $dryRun = false, bool $skipImport = false, int $osmLimit = 250, ?string $municipalitySlug = null): array
     {
         return [
             'legal' => $this->ensureLegal($dryRun),
             'cleanup' => $this->cleanupJunkPois($dryRun),
             'events' => $this->ensureWelcomeEvent($dryRun),
-            'osm' => $skipImport ? null : $this->importOsm($dryRun, $osmLimit),
+            'osm' => $skipImport ? null : $this->importOsm($dryRun, $osmLimit, $municipalitySlug),
         ];
     }
 
@@ -130,7 +133,7 @@ class MvpPrepareService
     }
 
     /** @return array{created: int, updated: int, skipped: int, total: int, error?: string} */
-    public function importOsm(bool $dryRun = false, int $limit = 250): array
+    public function importOsm(bool $dryRun = false, int $limit = 250, ?string $municipalitySlug = null): array
     {
         $center = AppSetting::getValue('app.default_center', [
             'lat' => 43.1107,
@@ -140,12 +143,13 @@ class MvpPrepareService
 
         $lat = (float) ($center['lat'] ?? 43.1107);
         $lng = (float) ($center['lng'] ?? 12.3908);
-        // ~6–7 km box around Perugia centro
+        // Riquadro operativo intorno al centro mappa configurato (focus Umbria/Perugia).
         $delta = 0.055;
 
         $actor = User::query()->whereIn('role', [UserRole::SuperAdmin, UserRole::Admin])->first();
 
         try {
+            $municipality = $this->resolveImportMunicipality($municipalitySlug);
             $result = $this->osm->import(
                 [
                     'south' => $lat - $delta,
@@ -153,6 +157,7 @@ class MvpPrepareService
                     'north' => $lat + $delta,
                     'east' => $lng + $delta,
                 ],
+                $municipality,
                 $dryRun,
                 $limit,
                 $actor,
@@ -173,5 +178,20 @@ class MvpPrepareService
             'skipped' => $result['skipped'],
             'total' => $result['total'],
         ];
+    }
+
+    private function resolveImportMunicipality(?string $slug): Municipality
+    {
+        if (is_string($slug) && trim($slug) !== '') {
+            return MunicipalityResolver::find($slug);
+        }
+
+        $id = TerritoryDefaults::get()['municipality_id'];
+        $municipality = $id ? Municipality::query()->find($id) : null;
+        if ($municipality) {
+            return $municipality;
+        }
+
+        throw new \InvalidArgumentException('Nessun comune predefinito. Esegui il backfill territoriale oppure passa --municipality=.');
     }
 }

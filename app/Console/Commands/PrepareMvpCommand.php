@@ -10,7 +10,8 @@ class PrepareMvpCommand extends Command
     protected $signature = 'pgspot:prepare-mvp
                             {--dry-run : Mostra le azioni senza scrivere}
                             {--skip-import : Non importare POI da OpenStreetMap}
-                            {--limit=250 : Limite elementi OSM}';
+                            {--limit=250 : Limite elementi OSM}
+                            {--municipality= : Slug o id del comune OSM; altrimenti il comune predefinito}';
 
     protected $description = 'Chiude i gap MVP (legal, cleanup, eventi, import OSM) — resta solo caricare le foto';
 
@@ -19,13 +20,15 @@ class PrepareMvpCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $skipImport = (bool) $this->option('skip-import');
         $limit = max(1, (int) $this->option('limit'));
+        $municipality = $this->option('municipality');
+        $municipalitySlug = is_string($municipality) && $municipality !== '' ? $municipality : null;
 
         if ($dryRun) {
             $this->warn('Dry-run: nessuna modifica persistita.');
         }
 
         $this->info('Preparazione MVP PG Spot...');
-        $result = $prepare->run($dryRun, $skipImport, $limit);
+        $result = $prepare->run($dryRun, $skipImport, $limit, $municipalitySlug);
 
         $this->newLine();
         $this->line('<fg=cyan>Legal</>');

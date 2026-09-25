@@ -6,11 +6,13 @@ use App\Enums\UserRole;
 use App\Models\AppSetting;
 use App\Models\User;
 use App\Services\OsmImportService;
+use App\Support\MunicipalityResolver;
 use Illuminate\Console\Command;
 
 class ImportOsmCommand extends Command
 {
     protected $signature = 'pgspot:import-osm
+                            {--municipality= : Slug, id del record, oppure istat:054039}
                             {--dry-run : Elenca senza salvare}
                             {--limit=250 : Max elementi}
                             {--south= : BBox south}
@@ -22,6 +24,17 @@ class ImportOsmCommand extends Command
 
     public function handle(OsmImportService $osm): int
     {
+        try {
+            $municipality = MunicipalityResolver::find((string) $this->option('municipality'));
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage());
+
+            return self::FAILURE;
+        }
+
+        $municipality->loadMissing('province');
+        $this->info('Comune: '.$municipality->name.' ('.$municipality->province?->name.')');
+
         $center = AppSetting::getValue('app.default_center', [
             'lat' => 43.1107,
             'lng' => 12.3908,
@@ -51,7 +64,7 @@ class ImportOsmCommand extends Command
         ));
 
         try {
-            $result = $osm->import($bbox, $dryRun, $limit, $actor);
+            $result = $osm->import($bbox, $municipality, $dryRun, $limit, $actor);
         } catch (\Throwable $e) {
             $this->error('Import fallito: '.$e->getMessage());
             if (str_contains($e->getMessage(), 'SSL certificate')) {

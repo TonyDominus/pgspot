@@ -21,6 +21,7 @@ const jsonLd = computed(() => {
 
 <template>
     <Head :title="seo.title">
+        <link v-if="seo.url" head-key="canonical" rel="canonical" :href="seo.url" />
         <meta head-key="description" name="description" :content="seo.description" />
         <meta head-key="og:type" property="og:type" content="website" />
         <meta head-key="og:title" property="og:title" :content="seo.title" />

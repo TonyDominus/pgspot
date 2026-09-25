@@ -10,13 +10,13 @@ const props = defineProps({
 const imageUrl = computed(() => props.poi?.primary_photo_url ?? props.poi?.photos?.[0]?.url ?? null);
 
 const gradient = computed(() => {
-    const cat = props.poi?.categories?.[0];
+    const cat = props.poi?.primary_category ?? props.poi?.categories?.[0];
     const color = cat?.color ?? categoryMeta.panorami?.color ?? '#2E7D32';
     return `linear-gradient(135deg, ${color}99, ${color})`;
 });
 
 const icon = computed(() => {
-    const slug = props.poi?.categories?.[0]?.slug;
+    const slug = (props.poi?.primary_category ?? props.poi?.categories?.[0])?.slug;
     return categoryMeta[slug]?.icon ?? 'panorama';
 });
 </script>

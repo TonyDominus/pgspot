@@ -34,6 +34,8 @@ const sortIcon = (col) => {
                 <h1 class="text-2xl font-bold text-pg-text">POI</h1>
                 <p class="text-sm text-pg-muted">Gestisci e modifica i punti di interesse</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2">
+            <Link :href="route('admin.pois.create')" class="pg-btn-primary text-sm">Nuovo POI</Link>
             <form class="flex gap-2" @submit.prevent="router.get(route('admin.pois.index'), { ...filters, q: $event.target.q.value })">
                 <input name="q" :value="filters.q" type="search" placeholder="Cerca..." class="pg-input text-sm" />
                 <select
@@ -45,6 +47,7 @@ const sortIcon = (col) => {
                     <option v-for="s in statuses" :key="s" :value="s">{{ s }}</option>
                 </select>
             </form>
+            </div>
         </div>
 
         <div class="pg-card overflow-x-auto">
@@ -52,6 +55,7 @@ const sortIcon = (col) => {
                 <thead class="border-b border-gray-100 text-xs uppercase text-pg-muted">
                     <tr>
                         <th class="cursor-pointer px-4 py-3" @click="sortLink('name')">Nome {{ sortIcon('name') }}</th>
+                        <th class="px-4 py-3">Comune</th>
                         <th class="px-4 py-3">Categorie</th>
                         <th class="cursor-pointer px-4 py-3" @click="sortLink('status')">Stato {{ sortIcon('status') }}</th>
                         <th class="cursor-pointer px-4 py-3" @click="sortLink('rating')">Rating {{ sortIcon('rating') }}</th>
@@ -62,6 +66,7 @@ const sortIcon = (col) => {
                 <tbody>
                     <tr v-for="poi in pois.data" :key="poi.id" class="border-b border-gray-50 hover:bg-gray-50/50">
                         <td class="px-4 py-3 font-medium text-pg-text">{{ poi.name }}</td>
+                        <td class="px-4 py-3">{{ poi.municipality?.name || '—' }}</td>
                         <td class="px-4 py-3">
                             <span
                                 v-for="cat in poi.categories"

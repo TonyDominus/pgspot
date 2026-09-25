@@ -34,7 +34,7 @@ class SitemapController extends Controller
             );
         });
 
-        Itinerary::query()->published()->orderByDesc('updated_at')->each(function (Itinerary $itinerary) use (&$urls) {
+        Itinerary::query()->public()->orderByDesc('updated_at')->each(function (Itinerary $itinerary) use (&$urls) {
             $urls[] = $this->entry(
                 route('itineraries.show', $itinerary->slug),
                 $itinerary->updated_at?->toAtomString() ?? now()->toAtomString(),

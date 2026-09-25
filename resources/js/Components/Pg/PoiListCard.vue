@@ -17,7 +17,7 @@ defineProps({
             </div>
             <div class="min-w-0 flex-1 py-0.5">
                 <h3 class="font-semibold text-pg-text">{{ poi.name }}</h3>
-                <p class="mt-1 line-clamp-2 text-sm text-pg-muted">{{ poi.description }}</p>
+                <p class="mt-1 line-clamp-2 text-sm text-pg-muted">{{ poi.description || poi.municipality }}</p>
                 <div class="mt-2 flex items-center justify-between">
                     <span v-if="poi.distance_label" class="text-xs text-pg-muted">{{ poi.distance_label }}</span>
                     <StarRating :rating="poi.rating" />

@@ -14,6 +14,9 @@ const navItems = computed(() => {
     const items = [
         { href: 'admin.dashboard', icon: 'compass', label: 'Dashboard' },
         { href: 'admin.pois.index', icon: 'location', label: 'POI' },
+        { href: 'admin.categories.index', icon: 'panorama', label: 'Categorie' },
+        { href: 'admin.tags.index', icon: 'filter', label: 'Caratteristiche' },
+        { href: 'admin.territories.index', icon: 'map', label: 'Territori' },
         { href: 'admin.contributions.index', icon: 'filter', label: 'Moderazione' },
         { href: 'admin.reviews.index', icon: 'alert', label: 'Recensioni' },
         { href: 'admin.sponsorships.index', icon: 'star', label: 'Sponsor' },

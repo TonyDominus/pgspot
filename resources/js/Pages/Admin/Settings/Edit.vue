@@ -1,9 +1,12 @@
 <script setup>
 import AdminShell from '@/Layouts/AdminShell.vue';
+import TerritoryCascade from '@/Components/Pg/TerritoryCascade.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     settings: Object,
+    regions: Array,
+    territory: Object,
 });
 
 const form = useForm({
@@ -21,6 +24,9 @@ const form = useForm({
     legal_contact: props.settings.legal_contact,
     events_public: props.settings.events_public ?? true,
     ga_measurement_id: props.settings.ga_measurement_id ?? '',
+    default_region_id: props.territory?.region_id ?? null,
+    default_province_id: props.territory?.province_id ?? null,
+    default_municipality_id: props.territory?.municipality_id ?? null,
 });
 
 function submit() {
@@ -66,6 +72,24 @@ function submit() {
                         <input v-model="form.map_zoom" type="number" min="1" max="19" class="pg-input" required />
                     </div>
                 </div>
+            </section>
+
+            <section class="pg-card space-y-4 p-6">
+                <h2 class="font-semibold text-pg-text">Territorio predefinito</h2>
+                <p class="text-xs text-pg-muted">
+                    Selezione iniziale di regione, provincia e comune. La mappa resta sul centro impostato sopra. I comuni non vengono indicizzati.
+                </p>
+                <TerritoryCascade
+                    :regions="regions"
+                    v-model:region-id="form.default_region_id"
+                    v-model:province-id="form.default_province_id"
+                    v-model:municipality-id="form.default_municipality_id"
+                    :errors="{
+                        region_id: form.errors.default_region_id,
+                        province_id: form.errors.default_province_id,
+                        municipality_id: form.errors.default_municipality_id,
+                    }"
+                />
             </section>
 
             <section class="pg-card space-y-4 p-6">

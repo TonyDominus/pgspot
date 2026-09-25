@@ -1,7 +1,7 @@
 <script setup>
 import AdminShell from '@/Layouts/AdminShell.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
 
 const props = defineProps({
     contributions: Object,
@@ -9,6 +9,15 @@ const props = defineProps({
     pendingCount: Number,
 });
 
+const localFilters = reactive({
+    status: props.filters?.status ?? '',
+    type: props.filters?.type ?? '',
+    user: props.filters?.user ?? '',
+    municipality: props.filters?.municipality ?? '',
+    from: props.filters?.from ?? '',
+    to: props.filters?.to ?? '',
+    duplicates: props.filters?.duplicates ?? '',
+});
 const rejectForm = useForm({ rejection_reason: '' });
 const rejectingId = ref(null);
 
@@ -45,6 +54,25 @@ function typeLabel(type) {
             </p>
         </div>
 
+        <form class="mb-4 grid gap-2 sm:grid-cols-4" @submit.prevent="router.get(route('admin.contributions.index'), localFilters)">
+            <select v-model="localFilters.type" class="pg-input text-sm">
+                <option value="">Tutti i tipi</option>
+                <option value="new_poi">Nuovo spot</option>
+                <option value="edit">Modifica</option>
+                <option value="photo">Foto</option>
+                <option value="report">Segnalazione</option>
+            </select>
+            <input v-model="localFilters.user" class="pg-input text-sm" placeholder="Utente" />
+            <input v-model="localFilters.municipality" class="pg-input text-sm" placeholder="Comune" />
+            <input v-model="localFilters.from" type="date" class="pg-input text-sm" />
+            <input v-model="localFilters.to" type="date" class="pg-input text-sm" />
+            <label class="flex items-center gap-2 text-sm">
+                <input v-model="localFilters.duplicates" type="checkbox" true-value="1" false-value="" />
+                Possibili duplicati
+            </label>
+            <button type="submit" class="pg-btn-outline text-sm">Filtra</button>
+        </form>
+
         <div class="mb-4 flex gap-2">
             <button
                 type="button"
@@ -74,8 +102,15 @@ function typeLabel(type) {
                             {{ c.payload?.name ?? c.poi?.name ?? 'Contributo' }}
                         </p>
                         <p class="text-sm text-pg-muted">
-                            da {{ c.user?.name }} ({{ c.user?.email }}) · {{ new Date(c.created_at).toLocaleString('it-IT') }}
+                            da {{ c.user?.name }} ({{ c.user?.email }})
+                            <span v-if="c.user?.is_trusted_contributor"> · affidabile</span>
+                            · {{ new Date(c.created_at).toLocaleString('it-IT') }}
                         </p>
+                        <p v-if="c.poi" class="text-xs text-pg-muted">
+                            Luogo:
+                            <Link :href="route('admin.pois.edit', c.poi.id)" class="text-pg-primary">{{ c.poi.name }}</Link>
+                        </p>
+                        <p v-if="c.has_duplicates" class="text-xs text-amber-700">Possibile duplicato</p>
                     </div>
                     <div v-if="c.status === 'pending'" class="flex gap-2">
                         <button type="button" class="pg-btn-primary text-sm" @click="approve(c.id)">Approva</button>
@@ -91,6 +126,12 @@ function typeLabel(type) {
                         class="mb-3 max-h-48 w-full rounded-lg object-cover"
                     />
                     <p v-if="c.payload.description">{{ c.payload.description }}</p>
+                    <p v-if="c.municipality_name" class="text-xs text-pg-muted">Comune: {{ c.municipality_name }}</p>
+                    <ul v-if="c.payload.changes" class="mt-2 space-y-1 text-xs">
+                        <li v-for="(change, field) in c.payload.changes" :key="field">
+                            {{ field }}: {{ change.from ?? '—' }} → {{ change.to ?? '—' }}
+                        </li>
+                    </ul>
                     <p v-if="c.payload.latitude" class="text-xs text-pg-muted">
                         {{ c.payload.latitude }}, {{ c.payload.longitude }}
                     </p>

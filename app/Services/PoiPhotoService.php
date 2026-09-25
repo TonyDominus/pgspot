@@ -37,7 +37,7 @@ class PoiPhotoService
         return $file->store('contributions/pending', self::DISK);
     }
 
-    public function attachFromPath(Poi $poi, string $path, bool $isPrimary = false, ?int $uploadedBy = null): ?PoiPhoto
+    public function attachFromPath(Poi $poi, string $path, bool $isPrimary = false, ?int $uploadedBy = null, bool $promoteIfEmpty = true, ?string $caption = null): ?PoiPhoto
     {
         if (! Storage::disk(self::DISK)->exists($path)) {
             return null;
@@ -48,7 +48,7 @@ class PoiPhotoService
 
         Storage::disk(self::DISK)->move($path, $newPath);
 
-        if ($isPrimary || ! $poi->photos()->exists()) {
+        if ($isPrimary || ($promoteIfEmpty && ! $poi->photos()->exists())) {
             $poi->photos()->update(['is_primary' => false]);
             $isPrimary = true;
         }
@@ -57,6 +57,7 @@ class PoiPhotoService
 
         return $poi->photos()->create([
             'path' => $newPath,
+            'caption' => $caption,
             'is_primary' => $isPrimary,
             'sort_order' => $sortOrder,
             'uploaded_by' => $uploadedBy,

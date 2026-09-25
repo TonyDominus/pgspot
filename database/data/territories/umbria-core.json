@@ -1,0 +1,38 @@
+{
+    "regions": [
+        {
+            "name": "Umbria",
+            "slug": "umbria",
+            "provinces": [
+                {
+                    "name": "Perugia",
+                    "slug": "perugia",
+                    "code": "PG",
+                    "municipalities": [
+                        {
+                            "name": "Perugia",
+                            "slug": "perugia",
+                            "latitude": 43.1107,
+                            "longitude": 12.3908
+                        },
+                        {
+                            "name": "Assisi",
+                            "slug": "assisi"
+                        }
+                    ]
+                },
+                {
+                    "name": "Terni",
+                    "slug": "terni",
+                    "code": "TR",
+                    "municipalities": [
+                        {
+                            "name": "Terni",
+                            "slug": "terni"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

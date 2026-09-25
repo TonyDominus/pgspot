@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppShell from '@/Layouts/AppShell.vue';
@@ -37,6 +37,10 @@ const roleLabel = computed(() => ({
                 <p class="text-sm text-pg-muted">Gestisci il tuo account</p>
             </div>
         </header>
+
+        <div class="px-4 pt-4">
+            <Link :href="route('contribute.mine')" class="text-sm font-medium text-pg-primary">I miei contributi</Link>
+        </div>
 
         <div class="mx-auto mt-4 max-w-2xl space-y-4 px-4 pb-8 lg:px-0">
             <div class="pg-card flex items-center gap-4 p-5">

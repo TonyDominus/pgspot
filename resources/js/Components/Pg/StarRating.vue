@@ -25,7 +25,11 @@ function setRating(n) {
 </script>
 
 <template>
-    <div class="inline-flex items-center gap-0.5">
+    <div
+        class="inline-flex items-center gap-0.5"
+        :role="interactive ? 'group' : 'img'"
+        :aria-label="interactive ? 'Scegli un voto da 1 a 5' : `Valutazione ${Number(rating || 0).toFixed(1)} su 5`"
+    >
         <button
             v-for="n in 5"
             :key="n"
@@ -33,6 +37,8 @@ function setRating(n) {
             class="transition-transform"
             :class="interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default pointer-events-none'"
             :disabled="!interactive"
+            :aria-label="interactive ? `${n} su 5` : undefined"
+            :tabindex="interactive ? 0 : -1"
             @click="setRating(n)"
         >
             <PgIcon

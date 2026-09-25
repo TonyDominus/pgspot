@@ -18,7 +18,7 @@ defineProps({
             <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-pg-text">{{ poi.name }}</p>
                 <p class="truncate text-xs text-pg-muted">
-                    {{ poi.categories?.[0]?.name }}
+                    {{ poi.primary_category?.name ?? poi.categories?.[0]?.name }}
                     <span v-if="poi.distance_label"> · {{ poi.distance_label }}</span>
                 </p>
                 <StarRating :rating="poi.rating" class="mt-1" />

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\PoiStatus;
 use App\Models\Category;
+use App\Models\Municipality;
 use App\Models\Poi;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -22,7 +23,7 @@ class OsmImportService
      * @param  array{south: float, west: float, north: float, east: float}  $bbox
      * @return array{created: int, updated: int, skipped: int, total: int, items: list<array{action: string, name: string, osm_id: string}>}
      */
-    public function import(array $bbox, bool $dryRun = false, int $limit = 250, ?User $actor = null): array
+    public function import(array $bbox, Municipality $municipality, bool $dryRun = false, int $limit = 250, ?User $actor = null): array
     {
         $elements = $this->fetchElements($bbox);
         $categories = Category::query()
@@ -69,13 +70,14 @@ class OsmImportService
                 'source' => 'openstreetmap',
                 'osm_id' => $osmKey,
                 'osm_amenity' => $amenity,
-                'free' => true,
-                'tags' => $this->defaultTags($amenity),
                 'needs_photo' => true,
             ];
 
             $existing = Poi::query()
-                ->where('attributes->osm_id', $osmKey)
+                ->where(function ($query) use ($osmKey) {
+                    $query->where('source_ref', $osmKey)
+                        ->orWhere('attributes->osm_id', $osmKey);
+                })
                 ->first();
 
             if ($dryRun) {
@@ -90,12 +92,18 @@ class OsmImportService
             }
 
             if ($existing) {
+                $merged = array_merge($existing->attributes ?? [], $attributes);
+                unset($merged['free'], $merged['tags']);
                 $existing->fill([
                     'name' => $name,
                     'latitude' => $coords['lat'],
                     'longitude' => $coords['lng'],
                     'address' => $address ?: $existing->address,
-                    'attributes' => array_merge($existing->attributes ?? [], $attributes),
+                    'municipality_id' => $municipality->id,
+                    'source_type' => 'osm',
+                    'source_ref' => $osmKey,
+                    'primary_category_id' => $existing->primary_category_id ?: $category->id,
+                    'attributes' => $merged,
                 ]);
                 $existing->save();
                 $existing->categories()->syncWithoutDetaching([$category->id]);
@@ -112,6 +120,10 @@ class OsmImportService
                 'latitude' => $coords['lat'],
                 'longitude' => $coords['lng'],
                 'address' => $address,
+                'municipality_id' => $municipality->id,
+                'primary_category_id' => $category->id,
+                'source_type' => 'osm',
+                'source_ref' => $osmKey,
                 'status' => PoiStatus::Published,
                 'attributes' => $attributes,
                 'created_by' => $actor?->id,
@@ -246,7 +258,7 @@ QL;
     {
         $parts = array_filter([
             trim(($tags['addr:street'] ?? '').' '.($tags['addr:housenumber'] ?? '')),
-            $tags['addr:city'] ?? 'Perugia',
+            trim((string) ($tags['addr:city'] ?? '')),
         ]);
 
         $address = trim(implode(', ', $parts));
@@ -261,17 +273,6 @@ QL;
             'drinking_water' => 'Punto di acqua potabile (dato OpenStreetMap).',
             'parking' => 'Area di sosta (dato OpenStreetMap). Controlla tariffe e orari in loco.',
             default => 'Punto importato da OpenStreetMap.',
-        };
-    }
-
-    /** @return list<string> */
-    private function defaultTags(string $amenity): array
-    {
-        return match ($amenity) {
-            'toilets' => ['Accessibile'],
-            'drinking_water' => ['Gratuito'],
-            'parking' => ['Con parcheggio'],
-            default => [],
         };
     }
 

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\EventStatus;
+use App\Enums\ItineraryStatus;
 use App\Enums\PoiStatus;
 use App\Enums\SponsorshipPlacement;
 use App\Enums\SponsorshipType;
@@ -10,9 +11,13 @@ use App\Enums\UserRole;
 use App\Models\AppSetting;
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Itinerary;
+use App\Models\Municipality;
 use App\Models\Poi;
 use App\Models\Sponsorship;
 use App\Models\User;
+use App\Services\TaxonomyBackfillService;
+use App\Support\LegalDefaults;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -63,10 +68,10 @@ class DatabaseSeeder extends Seeder
         AppSetting::setValue('site.contact', ['email' => 'info@pgspot.it']);
 
         foreach ([
-            'legal.privacy' => \App\Support\LegalDefaults::body('privacy'),
-            'legal.terms' => \App\Support\LegalDefaults::body('termini'),
-            'legal.cookies' => \App\Support\LegalDefaults::body('cookie'),
-            'legal.contact' => \App\Support\LegalDefaults::body('contatti'),
+            'legal.privacy' => LegalDefaults::body('privacy'),
+            'legal.terms' => LegalDefaults::body('termini'),
+            'legal.cookies' => LegalDefaults::body('cookie'),
+            'legal.contact' => LegalDefaults::body('contatti'),
         ] as $key => $body) {
             $existing = AppSetting::getValue($key);
             $current = is_array($existing) ? trim((string) ($existing['body'] ?? '')) : '';
@@ -90,6 +95,17 @@ class DatabaseSeeder extends Seeder
         Category::query()
             ->whereNotIn('slug', collect($categories)->pluck('slug'))
             ->update(['is_active' => false]);
+
+        $this->call(TerritorySeeder::class);
+
+        $perugiaMunicipalityId = Municipality::query()
+            ->where('slug', 'perugia')
+            ->whereHas('province', fn ($q) => $q->where('code', 'PG'))
+            ->value('id');
+
+        if (! $perugiaMunicipalityId) {
+            throw new \RuntimeException('Comune di Perugia assente: esegui le migration territoriali.');
+        }
 
         $cats = Category::query()->whereIn('slug', collect($categories)->pluck('slug'))->pluck('id', 'slug');
 
@@ -203,6 +219,7 @@ class DatabaseSeeder extends Seeder
                 ['slug' => $data['slug']],
                 [
                     ...$data,
+                    'municipality_id' => $perugiaMunicipalityId,
                     'status' => PoiStatus::Published,
                     'created_by' => $superAdmin->id,
                     'approved_by' => $superAdmin->id,
@@ -250,37 +267,59 @@ class DatabaseSeeder extends Seeder
 
         $poiIdsBySlug = Poi::query()->pluck('id', 'slug');
 
-        \App\Models\Itinerary::query()->updateOrCreate(
+        $first = Itinerary::query()->updateOrCreate(
             ['slug' => 'perugia-2-ore'],
             [
                 'title' => 'Perugia in 2 ore',
+                'excerpt' => 'Panorami del centro storico in una passeggiata breve.',
                 'description' => 'Panorami imperdibili del centro storico: dalla Rocca Paolina al Belvedere di Porta Sole.',
                 'duration' => '2h',
-                'poi_ids' => array_values(array_filter([
-                    $poiIdsBySlug['rocca-paolina'] ?? null,
-                    $poiIdsBySlug['piazza-iv-novembre'] ?? null,
-                    $poiIdsBySlug['scalianta-ercolano'] ?? null,
-                    $poiIdsBySlug['belvedere-porta-sole'] ?? null,
-                    $poiIdsBySlug['giardini-frontone'] ?? null,
-                ])),
+                'estimated_duration_minutes' => 120,
+                'status' => ItineraryStatus::Published,
                 'sort_order' => 1,
             ],
         );
+        $this->syncSeedStops($first, [
+            $poiIdsBySlug['rocca-paolina'] ?? null,
+            $poiIdsBySlug['piazza-iv-novembre'] ?? null,
+            $poiIdsBySlug['scalianta-ercolano'] ?? null,
+            $poiIdsBySlug['belvedere-porta-sole'] ?? null,
+            $poiIdsBySlug['giardini-frontone'] ?? null,
+        ]);
 
-        \App\Models\Itinerary::query()->updateOrCreate(
+        $second = Itinerary::query()->updateOrCreate(
             ['slug' => 'tramonto-centro'],
             [
                 'title' => 'Tramonto sul centro',
+                'excerpt' => 'I punti migliori per il golden hour.',
                 'description' => 'I migliori punti per il golden hour con vista sulla città.',
                 'duration' => '1.5h',
-                'poi_ids' => array_values(array_filter([
-                    $poiIdsBySlug['giardini-frontone'] ?? null,
-                    $poiIdsBySlug['belvedere-porta-sole'] ?? null,
-                    $poiIdsBySlug['piazza-iv-novembre'] ?? null,
-                    $poiIdsBySlug['scalianta-ercolano'] ?? null,
-                ])),
+                'estimated_duration_minutes' => 90,
+                'status' => ItineraryStatus::Published,
                 'sort_order' => 2,
             ],
         );
+        $this->syncSeedStops($second, [
+            $poiIdsBySlug['giardini-frontone'] ?? null,
+            $poiIdsBySlug['belvedere-porta-sole'] ?? null,
+            $poiIdsBySlug['piazza-iv-novembre'] ?? null,
+            $poiIdsBySlug['scalianta-ercolano'] ?? null,
+        ]);
+
+        app(TaxonomyBackfillService::class)->run();
+    }
+
+    /**
+     * @param  list<int|null>  $poiIds
+     */
+    private function syncSeedStops(Itinerary $itinerary, array $poiIds): void
+    {
+        $payload = [];
+        $position = 1;
+        foreach (array_values(array_filter($poiIds)) as $poiId) {
+            $payload[(int) $poiId] = ['position' => $position, 'note' => null];
+            $position++;
+        }
+        $itinerary->pois()->sync($payload);
     }
 }

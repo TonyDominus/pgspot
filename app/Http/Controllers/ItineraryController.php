@@ -3,56 +3,72 @@
 namespace App\Http\Controllers;
 
 use App\Models\Itinerary;
-use App\Models\Poi;
+use App\Services\ItineraryService;
+use App\Support\Seo;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ItineraryController extends Controller
 {
+    public function __construct(private ItineraryService $itineraries) {}
+
     public function index(): Response
     {
-        $itineraries = Itinerary::query()
-            ->published()
+        $items = Itinerary::query()
+            ->public()
+            ->with(['pois' => fn ($pois) => $pois->published()->with([
+                'municipality.province.region',
+                'photos' => fn ($photos) => $photos->where('is_primary', true),
+            ])])
+            ->withCount(['pois as stop_count' => fn ($pois) => $pois->published()])
             ->get();
 
-        $allPoiIds = $itineraries->flatMap(fn ($i) => $i->poi_ids ?? [])->unique()->filter();
-
-        $pois = Poi::query()
-            ->published()
-            ->whereIn('id', $allPoiIds)
-            ->with('categories:id,name,color')
-            ->get()
-            ->keyBy('id');
-
-        $itineraries->transform(function ($itinerary) use ($pois) {
-            $itinerary->stops = collect($itinerary->poi_ids ?? [])
-                ->map(fn ($id) => $pois->get($id))
-                ->filter()
-                ->values();
-
-            return $itinerary;
-        });
-
         return Inertia::render('Itineraries/Index', [
-            'itineraries' => $itineraries,
+            'itineraries' => $items->map(fn (Itinerary $itinerary) => [
+                'id' => $itinerary->id,
+                'slug' => $itinerary->slug,
+                'title' => $itinerary->title,
+                'excerpt' => $itinerary->excerpt ?: $this->excerptFrom($itinerary->description),
+                'cover_url' => $this->itineraries->coverUrl($itinerary),
+                'territory' => $this->itineraries->territoryLabel($itinerary),
+                'stop_count' => (int) $itinerary->stop_count,
+                'duration' => $this->itineraries->durationLabel($itinerary),
+                'difficulty' => $itinerary->difficulty,
+            ]),
         ]);
     }
 
     public function show(string $slug): Response
     {
-        $itinerary = Itinerary::query()->published()->where('slug', $slug)->firstOrFail();
+        $itinerary = Itinerary::query()->where('slug', $slug)->firstOrFail();
+        abort_unless($this->itineraries->isPubliclyVisible($itinerary), 404);
 
-        $stops = Poi::query()
-            ->published()
-            ->whereIn('id', $itinerary->poi_ids ?? [])
-            ->with('categories:id,name,color')
-            ->get()
-            ->sortBy(fn ($p) => array_search($p->id, $itinerary->poi_ids ?? [], true))
-            ->values();
+        $stops = $this->itineraries->publicStops($itinerary);
 
         return Inertia::render('Itineraries/Show', [
-            'itinerary' => $itinerary,
-            'stops' => $stops,
+            'itinerary' => [
+                'id' => $itinerary->id,
+                'slug' => $itinerary->slug,
+                'title' => $itinerary->title,
+                'excerpt' => $itinerary->excerpt,
+                'description' => $itinerary->description,
+                'cover_url' => $this->itineraries->coverUrl($itinerary),
+                'territory' => $this->itineraries->territoryLabel($itinerary),
+                'duration' => $this->itineraries->durationLabel($itinerary),
+                'distance_km' => $itinerary->estimated_distance_km,
+                'difficulty' => $itinerary->difficulty,
+                'map_href' => route('home', ['itinerary' => $itinerary->slug]),
+            ],
+            'stops' => $stops->map(fn ($poi) => $this->itineraries->stopPayload($poi))->values(),
+            'seo' => Seo::forItinerary($itinerary, $stops),
         ]);
+    }
+
+    private function excerptFrom(?string $text): ?string
+    {
+        $text = trim(strip_tags((string) $text));
+
+        return $text === '' ? null : Str::limit($text, 160);
     }
 }
